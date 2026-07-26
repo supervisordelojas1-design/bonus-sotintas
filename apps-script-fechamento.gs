@@ -55,12 +55,36 @@ function doPost(e) {
   return resposta_({ ok: true, saved: true }, p.callback);
 }
 
+// Colunas que devem ser SEMPRE texto (senão o Sheets converte em data/número
+// e quebra o mês, a filial com zero à esquerda, login, etc.).
+var COLS_TEXTO = ['login','filial','mes','alcLojaNum','alcVendNum','telefone','emoji','nivelIdx'];
+
 function planilha_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) { sh = ss.insertSheet(SHEET_NAME); }
-  if (sh.getLastRow() === 0) { sh.appendRow(HEADERS); }
+  var novo = false;
+  if (!sh) { sh = ss.insertSheet(SHEET_NAME); novo = true; }
+  if (sh.getLastRow() === 0) { sh.appendRow(HEADERS); novo = true; }
+  if (novo) { forcarColunasTexto_(sh); }
   return sh;
+}
+
+// Marca as colunas sensíveis como formato TEXTO ("@") para o Sheets não converter.
+function forcarColunasTexto_(sh) {
+  try {
+    var max = sh.getMaxRows();
+    COLS_TEXTO.forEach(function (h) {
+      var c = HEADERS.indexOf(h);
+      if (c >= 0) sh.getRange(1, c + 1, max, 1).setNumberFormat('@');
+    });
+  } catch (e) {}
+}
+
+// Reaplica o formato texto na aba atual (rode 1x pelo editor após colar, se a aba já existia).
+function blindarPlanilha() {
+  var sh = planilha_();
+  forcarColunasTexto_(sh);
+  return 'Colunas de texto blindadas: ' + COLS_TEXTO.join(', ');
 }
 
 function gravar_(p) {
