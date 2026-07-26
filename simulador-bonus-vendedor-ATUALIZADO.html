@@ -235,6 +235,28 @@
   body.view-resumo #viewForm{display:none}
   body.view-resumo #viewResumo{display:block}
   body.view-resumo footer.total{display:none}
+  #viewRank{display:none}
+  body.view-rank #viewForm,body.view-rank #viewResumo{display:none}
+  body.view-rank #viewRank{display:block}
+  body.view-rank footer.total{display:none}
+  .rk-h{font-family:'Archivo',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);border-bottom:2px solid var(--red);padding-bottom:3px;margin:18px 0 8px}
+  .rk-scale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin:0 0 4px;padding:0 2px}
+  .race{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+  .rlane{display:grid;grid-template-columns:34% 1fr 46px;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+  .rlane:first-child{border-top:none}
+  .rlane.me{background:#FFF7DE;border-radius:8px}
+  .rlane .rname{font-size:11.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rlane .rtrack{position:relative;height:16px;background:#E5E9F0;border-radius:999px}
+  .rlane .rtick{position:absolute;top:0;bottom:0;width:2px;background:rgba(31,56,100,.35)}
+  .rlane .rem{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:15px;line-height:1}
+  .rlane .rpct{font-family:'Archivo',sans-serif;font-size:12px;text-align:right}
+  .rktab{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}
+  .rktab th{background:#EEF2F8;color:var(--navy);text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase}
+  .rktab td{padding:6px 8px;border-top:1px solid var(--line)}
+  .rktab td.p{font-family:'Archivo',sans-serif;font-weight:800;color:var(--navy);width:36px;text-align:center}
+  .rktab td.r,.rktab th.r{text-align:right}
+  .rktab tr.me{background:#FFF7DE}
+  .rk-load{font-size:13px;color:var(--muted);padding:10px}
   .rcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
   .rhead{background:var(--navy);color:#fff;padding:14px 16px;border-bottom:4px solid var(--red)}
   .rhead h2{color:#fff;border:none;margin:0;font-size:16px}
@@ -385,10 +407,12 @@
     <div class="grid">
       <label><span>Seu nome *</span><input id="vNome" type="text" autocomplete="name" placeholder="Ex.: Maria Silva"></label>
       <label><span>Seu login *</span><input id="vLogin" type="text" autocomplete="username" placeholder="Ex.: 456"></label>
+      <label><span>Celular (WhatsApp)</span><input id="vTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000"></label>
       <label><span>Filial *</span><select id="vFilial"></select></label>
       <label><span>Supervisor</span><input id="vSup" type="text" readonly tabindex="-1"
              style="background:#EEF2F8;font-weight:700;color:var(--muted)"></label>
       <label><span>Perfil DISC</span><select id="vDisc"><option value="">Selecione…</option><option>Executor</option><option>Comunicador</option><option>Planejador</option><option>Analista</option></select></label>
+      <label><span>Seu emoji na corrida</span><select id="vEmoji"><option>🎨</option><option>🚀</option><option>🔥</option><option>💪</option><option>🏆</option><option>⭐</option><option>🐺</option><option>🦁</option><option>⚡</option><option>🎯</option></select></label>
       <label><span>Mês de referência</span><input id="mesRef" type="month" value="2026-07"></label>
     </div>
   </fieldset>
@@ -519,7 +543,20 @@
     <button class="btn btn-primary full" id="btnGer" onclick="enviarGerente()">📤 Enviar para o Supervisor<span class="sub">registra seus números e entra no ranking</span></button>
     <button class="btn btn-navy" id="btnPdf" onclick="salvarPdf()">📄 Salvar / PDF</button>
     <button class="btn btn-wa" id="btnWa" onclick="enviarWhats()">📲 WhatsApp</button>
+    <button class="btn btn-navy full" onclick="verRanking()">🏆 Corrida & Ranking</button>
     <button class="btn btn-ghost full" onclick="verForm()">← Editar dados</button>
+  </div>
+</div>
+
+<!-- ==================== PÁGINA CORRIDA & RANKING ==================== -->
+<div id="viewRank">
+  <div class="rcard">
+    <div class="rhead"><h2>🏆 Corrida & Ranking</h2><p>Sua posição por % de alcance da meta — atualiza pelos envios do mês</p></div>
+    <div class="rbody"><div id="rankBody"><p class="rk-load">Carregando…</p></div></div>
+  </div>
+  <div class="acts">
+    <button class="btn btn-navy full" onclick="verRanking()">🔄 Atualizar ranking</button>
+    <button class="btn btn-ghost full" onclick="voltarDoRank()">← Voltar ao resumo</button>
   </div>
 </div>
 
@@ -1384,7 +1421,7 @@ function verMinhaPosicao(){
 }
 
 // ---------- Persistência dos dados (localStorage) ----------
-const PERSIST_IDS=['vNome','vLogin','vFilial','vDisc','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
+const PERSIST_IDS=['vNome','vLogin','vTel','vEmoji','vFilial','vDisc','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
 function salvaCampos(){ try{ const o={}; PERSIST_IDS.forEach(id=>{const e=document.getElementById(id); if(e) o[id]=e.value;});
   localStorage.setItem('stbonus_campos', JSON.stringify(o)); }catch(_e){} }
 function restauraCampos(){ try{ const raw=localStorage.getItem('stbonus_campos'); if(!raw) return;
@@ -1636,7 +1673,69 @@ function ferrFinalHtml(){
     '<p class="ff-sub">Use para aumentar o faturamento, subir o ticket médio e fugir da briga de preço — em qualquer indicador acima.</p>'+
     htmlFerramenta(FERRAMENTAS.escada)+htmlFerramenta(FERRAMENTAS.prompts)+'</div>';
 }
-function verForm(){ document.body.classList.remove('view-resumo'); }
+function voltarDoRank(){ document.body.classList.remove('view-rank'); document.body.classList.add('view-resumo'); window.scrollTo({top:0}); }
+function corAlcR(a){ return a>=100?'#1B7A3D':a>=95?'#5AA469':a>=80?'#D98A00':'#C0392B'; }
+function verRanking(){
+  var el=document.getElementById('rankBody'); if(!el) return;
+  document.body.classList.remove('view-resumo'); document.body.classList.add('view-rank'); window.scrollTo({top:0});
+  el.innerHTML='<p class="rk-load">Carregando ranking…</p>';
+  var filial=String(raw('vFilial')||'—'); var meuLogin=(raw('vLogin')||'').toLowerCase(); var meuNome=raw('vNome')||'Você';
+  var meuEmoji=raw('vEmoji')||'🎨'; var meta=N('meta'), fat=N('fat'); var minhaAlc=meta>0?fat/meta*100:0;
+  jsonp_(ENVIO_URL+'?action=list', function(res){
+    if(!res||!res.rows){ el.innerHTML='<p class="rk-load">Não consegui carregar agora. Confira a internet e tente novamente.</p>'; return; }
+    var mes=document.getElementById('mesRef').value||'';
+    var all=[];
+    res.rows.forEach(function(r){
+      if(mes && String(r.mes||'')!==mes) return;
+      var alc=(r.alcVendNum!=null&&r.alcVendNum!=='')?numB_(r.alcVendNum):(numB_(r.meta)>0?numB_(r.faturado)/numB_(r.meta)*100:numB_(r.alcVend));
+      all.push({nome:r.nome||'(sem nome)', login:(r.login||'').toString().toLowerCase(), filial:String(r.filial||'—'), emoji:(r.emoji||'🎨'), alc:alc});
+    });
+    var i=-1; for(var k=0;k<all.length;k++){ if((all[k].login&&all[k].login===meuLogin)||all[k].nome===meuNome){i=k;break;} }
+    var meObj={nome:meuNome+' (você)', login:meuLogin, filial:filial, emoji:meuEmoji, alc:minhaAlc, me:true};
+    if(i>=0) all[i]=meObj; else all.push(meObj);
+    renderRanking(all, filial);
+  });
+}
+function renderRanking(all, filial){
+  var el=document.getElementById('rankBody'); if(!el) return;
+  var pctN=function(a){return a.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';};
+  var naFilial=all.filter(function(x){return x.filial===String(filial);}).sort(function(a,b){return b.alc-a.alc;});
+  var empresa=all.slice().sort(function(a,b){return b.alc-a.alc;});
+  var corrida=naFilial.slice(0,12).map(function(x){
+    var w=Math.min(Math.max(x.alc,0),130)/130*100;
+    return '<div class="rlane'+(x.me?' me':'')+'">'+
+      '<span class="rname">'+x.emoji+' '+x.nome+'</span>'+
+      '<div class="rtrack">'+
+        '<span class="rtick" style="left:'+(95/130*100).toFixed(1)+'%"></span>'+
+        '<span class="rtick" style="left:'+(100/130*100).toFixed(1)+'%"></span>'+
+        '<span class="rtick" style="left:100%"></span>'+
+        '<span class="rem" style="left:'+w.toFixed(1)+'%">'+x.emoji+'</span>'+
+      '</div>'+
+      '<span class="rpct" style="color:'+corAlcR(x.alc)+'">'+pctN(x.alc)+'</span>'+
+    '</div>';
+  }).join('');
+  function tabela(list, escopo){
+    var meuPos=0; list.forEach(function(x,i){ if(x.me) meuPos=i+1; });
+    var meRow=null; for(var j=0;j<list.length;j++){ if(list[j].me){meRow=list[j];break;} }
+    var lim=escopo==='empresa'?10:list.length;
+    var linhas=list.slice(0,lim).map(function(x,i){
+      var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'º';
+      return '<tr'+(x.me?' class="me"':'')+'><td class="p">'+medal+'</td><td>'+x.emoji+' '+x.nome+'</td>'+
+        (escopo==='empresa'?'<td>'+x.filial+'</td>':'')+
+        '<td class="r" style="color:'+corAlcR(x.alc)+';font-weight:700">'+pctN(x.alc)+'</td></tr>';
+    }).join('');
+    var fora=(escopo==='empresa'&&meuPos>10&&meRow)?'<tr class="me"><td class="p">'+meuPos+'º</td><td>'+meRow.emoji+' '+meRow.nome+'</td><td>'+meRow.filial+'</td><td class="r" style="color:'+corAlcR(meRow.alc)+';font-weight:700">'+pctN(meRow.alc)+'</td></tr>':'';
+    return '<table class="rktab"><thead><tr><th>#</th><th>Vendedor</th>'+(escopo==='empresa'?'<th>Loja</th>':'')+'<th class="r">Alcance</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="'+(escopo==='empresa'?4:3)+'" style="color:var(--muted)">Sem envios ainda.</td></tr>')+fora+'</tbody></table>';
+  }
+  el.innerHTML=
+    '<h3 class="rk-h">🏁 Corrida da meta · Filial '+filial+'</h3>'+
+    '<div class="rk-scale"><span>0%</span><span>95%</span><span>100%</span><span>130%</span></div>'+
+    '<div class="race">'+(corrida||'<p class="rk-load">Sem envios da sua filial neste mês ainda.</p>')+'</div>'+
+    '<h3 class="rk-h">Ranking da filial</h3>'+tabela(naFilial,'filial')+
+    '<h3 class="rk-h">Ranking da empresa (rede)</h3>'+tabela(empresa,'empresa')+
+    '<p class="note">Ranking por % de alcance da meta, com os envios do mês. Envie o seu (botão Enviar para o Supervisor) para aparecer.</p>';
+}
+function verForm(){ document.body.classList.remove('view-resumo'); document.body.classList.remove('view-rank'); }
 
 // =====================================================================
 // ENVIO PARA A PLANILHA CENTRAL (Google Apps Script)
@@ -1658,6 +1757,7 @@ function dadosSimulacao(){
     projetado: CHIPS['Projetado do mês'] || '',
     ganhoHoje: TOTAIS.hoje.toFixed(2), potencial: TOTAIS.teto.toFixed(2),
     faltaBuscar: TOTAIS.buscar.toFixed(2),
+    telefone: raw('vTel')||'', emoji: raw('vEmoji')||'🎨',
     nivelIdx: +document.getElementById('loja').value,
     alcLojaNum: (N('alcLoja')||0),
     alcVendNum: (N('meta')>0 ? (N('fat')/N('meta'))*100 : 0).toFixed(1),
