@@ -83,7 +83,7 @@
     <div><label>Mês</label><select id="fMes"><option value="">Todos</option></select></div>
     <div><label>Supervisor</label><select id="fSup"><option value="">Todos</option></select></div>
     <div><label>Loja</label><select id="fLoja"><option value="">Todas</option></select></div>
-    <button class="btn" onclick="carregar()">Atualizar</button>
+    <button class="btn" id="btnAtu" onclick="carregar()">Atualizar</button>
     <label class="chk"><input type="checkbox" id="autoRef"> Auto 3min</label>
     <span class="upd" id="upd"></span>
   </div>
@@ -392,7 +392,9 @@ function renderEngajamento(){
 function setAviso(txt,err){ const a=document.getElementById('aviso'); if(!txt){a.style.display='none';return;} a.style.display='block'; a.className='aviso'+(err?' err':''); a.innerHTML=txt; }
 
 function carregar(){
-  if(!API_URL){
+  var _b=document.getElementById('btnAtu'); if(_b){_b.textContent='Atualizando…'; _b.disabled=true;}
+  function _fim(){ if(_b){_b.textContent='Atualizar'; _b.disabled=false;} }
+  if(!API_URL){ _fim();
     render(MOCK);
     window.__STATS = MOCK.map(function(r){ return {nome:r.nome, filial:r.filial, supervisor:r.supervisor, emoji:r.emoji||'🎨', mes:r.mes, envios:1, dias:1, ultimo:r.timestamp}; });
     renderEngajamento();
@@ -401,14 +403,14 @@ function carregar(){
     return;
   }
   const cb='__cb'+Date.now();
-  const t=setTimeout(function(){ setAviso('Não consegui carregar os dados. Confira a URL e se a implantação está como "Qualquer pessoa".',true); render(MOCK); }, 12000);
-  window[cb]=function(res){ clearTimeout(t); delete window[cb];
+  const t=setTimeout(function(){ _fim(); setAviso('Não consegui carregar os dados. Confira a URL e se a implantação está como "Qualquer pessoa".',true); render(MOCK); }, 12000);
+  window[cb]=function(res){ clearTimeout(t); delete window[cb]; _fim();
     if(res&&res.ok&&res.rows){ setAviso(''); render(res.rows); carregarStats();
       document.getElementById('upd').textContent='atualizado '+fmtData(res.geradoEm||new Date().toISOString()); }
     else { setAviso('Resposta inesperada da API.',true); render(MOCK); } };
   const s=document.createElement('script');
   s.src=API_URL+'?action=list&callback='+cb+'&t='+Date.now();
-  s.onerror=function(){ clearTimeout(t); setAviso('Falha de rede ao chamar a API.',true); render(MOCK); };
+  s.onerror=function(){ clearTimeout(t); _fim(); setAviso('Falha de rede ao chamar a API.',true); render(MOCK); };
   document.body.appendChild(s);
 }
 
