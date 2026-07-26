@@ -1378,6 +1378,7 @@ function jsonp_(url, cb){
     document.body.appendChild(s);
   }catch(e){ cb(null); }
 }
+function nfil_(v){ if(v===null||v===undefined) return ''; var n=Number(v); return (v!==''&&!isNaN(n))?String(n):String(v).trim(); }
 function numB_(v){ if(v==null) return 0; if(typeof v==='number') return v;
   var x=String(v).replace(/[R$\s%]/g,'');
   if(x.indexOf(',')>-1&&x.indexOf('.')>-1) x=x.replace(/\./g,'').replace(',','.');
@@ -1399,7 +1400,7 @@ function verMinhaPosicao(){
     var map={};
     res.rows.forEach(function(r){
       if(mes && String(r.mes||'')!==mes) return;
-      if(String(r.filial||'')!==String(filial)) return;
+      if(nfil_(r.filial)!==nfil_(filial)) return;
       var login=(r.login||r.nome||'').toString().toLowerCase();
       var alc = (r.alcVendNum!=null&&r.alcVendNum!=='') ? numB_(r.alcVendNum)
                 : (numB_(r.meta)>0?numB_(r.faturado)/numB_(r.meta)*100:numB_(r.alcVend));
@@ -1710,7 +1711,7 @@ function carregaRanking(){
 function renderRanking(all, filial, info){
   var el=document.getElementById('rankBody'); if(!el) return;
   var pctN=function(a){return a.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';};
-  var naFilial=all.filter(function(x){return x.filial===String(filial);}).sort(function(a,b){return b.alc-a.alc;});
+  var naFilial=all.filter(function(x){return nfil_(x.filial)===nfil_(filial);}).sort(function(a,b){return b.alc-a.alc;});
   var empresa=all.slice().sort(function(a,b){return b.alc-a.alc;});
   var corrida=naFilial.slice(0,12).map(function(x){
     var w=Math.min(Math.max(x.alc,0),130)/130*100;
