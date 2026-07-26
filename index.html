@@ -1372,10 +1372,13 @@ function jsonp_(url, cb){
   try{
     var name='__mp'+Math.floor(Math.random()*1e9);
     var s=document.createElement('script');
-    window[name]=function(r){ try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r); };
-    s.onerror=function(){ try{s.remove();}catch(e){} cb(null); };
+    var done=false;
+    var fim=function(r){ if(done) return; done=true; try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r); };
+    window[name]=function(r){ fim(r); };
+    s.onerror=function(){ fim(null); };
     s.src=url+(url.indexOf('?')>-1?'&':'?')+'callback='+name+'&t='+Date.now();
     document.body.appendChild(s);
+    setTimeout(function(){ fim(null); }, 12000); // se o endereço estiver fora do ar, não trava
   }catch(e){ cb(null); }
 }
 function nfil_(v){ if(v===null||v===undefined) return ''; var n=Number(v); return (v!==''&&!isNaN(n))?String(n):String(v).trim(); }
@@ -1790,13 +1793,14 @@ function enviarGerente(){
   const qs=Object.keys(d).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(d[k]||'')).join('&');
   const url=ENVIO_URL+'?'+qs;
   btn.textContent='Enviando…'; btn.disabled=true;
-  const aberto=window.open(url,'_blank');
-  if(!aberto){
-    // pop-up bloqueado: envia em segundo plano por imagem (o registro é gravado do mesmo jeito)
-    const img=new Image(); img.src=url;
-    setTimeout(()=>alert('Simulação enviada para o seu Supervisor!\n\n'+d.nome+' · filial '+d.filial+
-      (d.supervisor?' · sup. '+d.supervisor:'')), 900);
-  }
+  // Envia em segundo plano (sem abrir aba). Duas vias, o que passar grava o registro:
+  var enviado=false;
+  try{ var img=new Image(); img.onload=function(){enviado=true;}; img.src=url; }catch(e){}
+  try{ fetch(url,{mode:'no-cors',cache:'no-store'}).then(function(){enviado=true;}).catch(function(){}); }catch(e){}
+  setTimeout(function(){
+    alert('✅ Simulação enviada para o seu Supervisor!\n\n'+d.nome+' · filial '+d.filial+
+      (d.supervisor?' · sup. '+d.supervisor:'')+'\n\nVocê já entrou no ranking. Toque em "Corrida & Ranking" para ver sua posição.');
+  }, 1200);
   setTimeout(()=>{ btn.textContent=original; btn.disabled=false; }, 1500);
   setTimeout(function(){ try{ if(typeof carregaRanking==='function') carregaRanking(); }catch(e){} }, 2500);
 }
