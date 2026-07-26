@@ -53,6 +53,13 @@
   .bar{height:8px;background:#E5E9F0;border-radius:99px;overflow:hidden;min-width:70px}
   .bar i{display:block;height:100%;border-radius:99px}
   .foot{font-size:11.5px;color:var(--muted);margin:16px 2px 30px}
+  .chk{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;align-self:center}
+  .focos{background:var(--warn-bg);border:1px solid #F0DFA0;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;margin-bottom:18px}
+  .focos h3{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--warn);margin-bottom:6px}
+  .focos ul{margin:0;padding-left:18px} .focos li{font-size:12.5px;color:var(--ink);margin-bottom:3px}
+  td.pos .delta-up{color:var(--ok);font-size:10px;font-weight:800;display:block;margin-top:1px}
+  td.pos .delta-dn{color:var(--no);font-size:10px;font-weight:800;display:block;margin-top:1px}
+  td.pos .delta-eq{color:var(--muted);font-size:9px;display:block;margin-top:1px}
   @media(max-width:680px){ .kpi strong{font-size:22px} td,th{padding:7px 6px} .hide-sm{display:none} }
 </style>
 </head>
@@ -71,10 +78,13 @@
     <div><label>Supervisor</label><select id="fSup"><option value="">Todos</option></select></div>
     <div><label>Loja</label><select id="fLoja"><option value="">Todas</option></select></div>
     <button class="btn" onclick="carregar()">Atualizar</button>
+    <label class="chk"><input type="checkbox" id="autoRef"> Auto 3min</label>
     <span class="upd" id="upd"></span>
   </div>
 
   <div class="kpis" id="kpis"></div>
+
+  <div id="focos" class="focos" style="display:none"></div>
 
   <h2>Por loja</h2>
   <table id="tabLoja"><thead><tr>
@@ -176,8 +186,11 @@ function render(rowsRaw){
   preencheSelect('fSup', unicos(all.map(r=>r.supervisor)));
   preencheSelect('fLoja', unicos(all.map(r=>r.filial)));
 
+  window.__ALLN = all;
+  if(!val('fMes')){ const ms=unicos(all.map(r=>r.mes)); if(ms.length){ document.getElementById('fMes').value = ms[ms.length-1]; } }
   const filtros = {mes:val('fMes'), sup:val('fSup'), loja:val('fLoja')};
   const A = computeAgg(rowsRaw, filtros);
+  renderFocos(A.rows);
 
   document.getElementById('kpis').innerHTML =
     card('Vendedores enviaram', String(A.kpi.vend), '') +
@@ -244,6 +257,7 @@ function renderRank(rows){
   const M = RANK_METRIC[metric]||RANK_METRIC.mesa;
   const grupos = agrupaRank(rows, by).sort((a,b)=>M.f(b)-M.f(a));
   const capEl=document.getElementById('rankCap'); if(capEl) capEl.textContent=M.cap;
+  const prevPos = posPrevMes(by, metric);
   const nomeCol = by==='vendedor'?'Vendedor':by==='loja'?'Loja':'Supervisor';
   const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'º';
   const hl=k=>metric===k?' hl':'';
@@ -253,7 +267,7 @@ function renderRank(rows){
     '<th class="r'+hl('alc')+'">Alcance</th><th class="r'+hl('garantido')+'">Garantido</th>'+
     '<th class="r'+hl('mesa')+'">Na mesa</th><th class="r'+hl('projetado')+'">Projetado</th></tr>';
   const body = grupos.length ? grupos.map((o,i)=>
-    '<tr><td class="pos">'+medal(i)+'</td>'+
+    '<tr><td class="pos">'+medal(i)+deltaBadge(prevPos,o.label,i+1)+'</td>'+
     '<td><b>'+o.label+'</b>'+(o.login?' <span style="color:var(--muted);font-size:11px">·'+o.login+'</span>':'')+'</td>'+
     '<td class="hide-sm" style="color:var(--muted);font-size:11.5px">'+(o.sub||'')+'</td>'+
     (by==='vendedor'?'':'<td class="r">'+o.n+'</td>')+
@@ -265,6 +279,37 @@ function renderRank(rows){
   const t=document.getElementById('tabRank');
   t.querySelector('thead').innerHTML=head;
   t.querySelector('tbody').innerHTML=body;
+}
+
+/* ------- focos de coaching + evolução mês a mês ------- */
+function renderFocos(rows){
+  var el=document.getElementById('focos'); if(!el) return;
+  rows=rows||[];
+  var foco=rows.filter(function(r){return r.alcVend<95;}).sort(function(a,b){return b.naMesa-a.naMesa;}).slice(0,5);
+  el.style.display='block';
+  if(!foco.length){ el.innerHTML='<h3>Focos de coaching</h3><div style="font-size:12.5px;color:var(--ok)">Todos no recorte estão em 95%+ — parabéns à equipe!</div>'; return; }
+  var html='<h3>Focos de coaching (abaixo de 95% — priorize por dinheiro na mesa)</h3><ul>';
+  foco.forEach(function(v){ html+='<li><b>'+v.nome+'</b> ('+v.filial+') — '+pct(v.alcVend)+' · <b>'+brl(v.naMesa)+'</b> na mesa</li>'; });
+  html+='</ul>';
+  el.innerHTML=html;
+}
+function prevMonth(m){ if(!m||m.length<7) return ''; var y=+m.slice(0,4), mo=+m.slice(5,7)-1; if(mo<1){mo=12;y--;} return y+'-'+('0'+mo).slice(-2); }
+function posPrevMes(by, metric){
+  var mesAtual=val('fMes'); if(!mesAtual) return null;
+  var mesAnt=prevMonth(mesAtual); if(!mesAnt) return null;
+  var all=window.__ALLN||[]; var sup=val('fSup'), loja=val('fLoja');
+  var prev=all.filter(function(r){ return r.mes===mesAnt && (!sup||r.supervisor===sup) && (!loja||r.filial===loja); });
+  if(!prev.length) return null;
+  var M=RANK_METRIC[metric]||RANK_METRIC.mesa;
+  var g=agrupaRank(prev, by).sort(function(a,b){return M.f(b)-M.f(a);});
+  var map={}; g.forEach(function(o,i){ map[o.label]=i+1; }); return map;
+}
+function deltaBadge(prevPos, label, curPos){
+  if(!prevPos || prevPos[label]==null) return '';
+  var d=prevPos[label]-curPos;
+  if(d>0) return '<span class="delta-up">\u25B2'+d+'</span>';
+  if(d<0) return '<span class="delta-dn">\u25BC'+(-d)+'</span>';
+  return '<span class="delta-eq">=</span>';
 }
 
 /* ------- carregamento (JSONP) + fallback mock ------- */
@@ -300,6 +345,10 @@ function carregar(){
 
 ['fMes','fSup','fLoja'].forEach(id=>document.getElementById(id).addEventListener('change',()=>render(window.__ROWS||[])));
 ['rankBy','rankMetric'].forEach(id=>document.getElementById(id).addEventListener('change',()=>renderRank(window.__FROWS||[])));
+let _auto=null;
+document.getElementById('autoRef').addEventListener('change',function(e){
+  if(e.target.checked){ _auto=setInterval(carregar,180000); } else { clearInterval(_auto); _auto=null; }
+});
 carregar();
 </script>
 </body>
