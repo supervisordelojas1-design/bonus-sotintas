@@ -1690,19 +1690,24 @@ function carregaRanking(){
   jsonp_(ENVIO_URL+'?action=list', function(res){
     if(!res||!res.rows){ el.innerHTML='<p class="rk-load">Não consegui carregar agora. Confira a internet e tente novamente.</p>'; return; }
     var mes=document.getElementById('mesRef').value||'';
-    var all=[];
-    res.rows.forEach(function(r){
-      if(mes && String(r.mes||'')!==mes) return;
+    var rows=res.rows||[];
+    function mapR(r){
       var alc=(r.alcVendNum!=null&&r.alcVendNum!=='')?numB_(r.alcVendNum):(numB_(r.meta)>0?numB_(r.faturado)/numB_(r.meta)*100:numB_(r.alcVend));
-      all.push({nome:r.nome||'(sem nome)', login:(r.login||'').toString().toLowerCase(), filial:String(r.filial||'—'), emoji:(r.emoji||'🎨'), alc:alc});
-    });
-    var i=-1; for(var k=0;k<all.length;k++){ if((all[k].login&&all[k].login===meuLogin)||all[k].nome===meuNome){i=k;break;} }
+      return {nome:r.nome||'(sem nome)', login:(r.login||'').toString().toLowerCase(), filial:String(r.filial||'—'), emoji:(r.emoji||'🎨'), alc:alc, mes:String(r.mes||'')};
+    }
+    function ehMeu(x){ return (x.login&&x.login===meuLogin)||x.nome===meuNome; }
+    var mapped=rows.map(mapR);
+    var doMes=mapped.filter(function(x){ return !mes || x.mes===mes; });
+    var todosMeses=false;
+    if(doMes.filter(function(x){return !ehMeu(x);}).length===0 && mapped.filter(function(x){return !ehMeu(x);}).length>0){ doMes=mapped; todosMeses=true; }
+    var all=doMes.slice();
+    var i=-1; for(var k=0;k<all.length;k++){ if(ehMeu(all[k])){i=k;break;} }
     var meObj={nome:meuNome+' (você)', login:meuLogin, filial:filial, emoji:meuEmoji, alc:minhaAlc, me:true};
     if(i>=0) all[i]=meObj; else all.push(meObj);
-    renderRanking(all, filial);
+    renderRanking(all, filial, {lidos:rows.length, todosMeses:todosMeses});
   });
 }
-function renderRanking(all, filial){
+function renderRanking(all, filial, info){
   var el=document.getElementById('rankBody'); if(!el) return;
   var pctN=function(a){return a.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';};
   var naFilial=all.filter(function(x){return x.filial===String(filial);}).sort(function(a,b){return b.alc-a.alc;});
@@ -1739,7 +1744,8 @@ function renderRanking(all, filial){
     '<div class="race">'+(corrida||'<p class="rk-load">Sem envios da sua filial neste mês ainda.</p>')+'</div>'+
     '<h3 class="rk-h">Ranking da filial</h3>'+tabela(naFilial,'filial')+
     '<h3 class="rk-h">Ranking da empresa (rede)</h3>'+tabela(empresa,'empresa')+
-    '<p class="note">Ranking por % de alcance da meta, com os envios do mês. Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · atualiza sozinho a cada 45s. Envie o seu (Enviar para o Supervisor) para aparecer.</p>';
+    '<p class="note" style="margin:8px 0 2px;font-weight:600;color:var(--navy)">'+(info?(info.lidos+' envio(s) lido(s) na planilha'+(info.todosMeses?' · mostrando TODOS os meses (poucos no mês selecionado)':'')):'')+'</p>'+
+    '<p class="note">Ranking por % de alcance da meta. Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · atualiza sozinho a cada 45s. Cada vendedor precisa de um LOGIN diferente para aparecer separado.</p>';
 }
 function verForm(){ if(_rankTimer){clearInterval(_rankTimer);_rankTimer=null;} document.body.classList.remove('view-resumo'); document.body.classList.remove('view-rank'); }
 
