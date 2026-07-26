@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Fechamento · Só Tintas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1F3864; --red:#C00000; --paper:#F4F6FA; --card:#FFFFFF; --ink:#22304A;
+    --muted:#64748B; --line:#DDE3EE; --ok:#1B7A3D; --ok-bg:#E4F4E9; --warn:#8A5A00;
+    --warn-bg:#FFF1D6; --no:#B4232A; --no-bg:#FCE8E9; --gold:#BF8F00;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.45}
+  .num{font-variant-numeric:tabular-nums}
+  header{background:var(--navy);color:#fff;padding:18px 16px 14px;border-bottom:5px solid var(--red)}
+  .wrap{max-width:1100px;margin:0 auto}
+  header h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(19px,3.6vw,26px);text-transform:uppercase;letter-spacing:.3px}
+  header p{opacity:.85;font-size:13px;margin-top:4px}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  .aviso{background:#FFF7DE;border:1px solid #F0DFA0;border-left:4px solid var(--red);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+  .aviso.err{background:var(--no-bg);border-left-color:var(--no)}
+
+  .filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px}
+  .filtros label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .filtros select{margin-top:4px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-weight:700;color:var(--navy);background:#fff;min-width:150px}
+  .filtros .btn{padding:9px 14px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.4px;cursor:pointer}
+  .filtros .upd{font-size:11px;color:var(--muted);margin-left:auto;align-self:center}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;border-top:4px solid var(--navy)}
+  .kpi.g{border-top-color:var(--ok)} .kpi.d{border-top-color:var(--red)} .kpi.p{border-top-color:var(--gold)}
+  .kpi b{display:block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .kpi strong{font-family:'Archivo',sans-serif;font-size:26px;color:var(--navy);display:block;margin-top:3px}
+  .kpi.g strong{color:var(--ok)} .kpi.d strong{color:var(--no)} .kpi.p strong{color:var(--gold)}
+  .kpi small{font-size:11px;color:var(--muted)}
+
+  h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin:20px 0 10px;border-bottom:3px solid var(--red);display:inline-block;padding-bottom:2px}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+  th{background:#EEF2F8;color:var(--navy);text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
+  td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:middle}
+  th.r,td.r{text-align:right;white-space:nowrap}
+  tbody tr:hover{background:#F7F9FD}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .p-ok{background:var(--ok-bg);color:var(--ok)} .p-am{background:var(--warn-bg);color:var(--warn)} .p-no{background:var(--no-bg);color:var(--no)}
+  .money{font-family:'Archivo',sans-serif}
+  .mesa{color:var(--no);font-weight:700}
+  td.hl,th.hl{background:#FFF7DE}
+  td.pos{font-family:'Archivo',sans-serif;font-weight:800;color:var(--navy);text-align:center;font-size:15px}
+  .bar{height:8px;background:#E5E9F0;border-radius:99px;overflow:hidden;min-width:70px}
+  .bar i{display:block;height:100%;border-radius:99px}
+  .foot{font-size:11.5px;color:var(--muted);margin:16px 2px 30px}
+  @media(max-width:680px){ .kpi strong{font-size:22px} td,th{padding:7px 6px} .hide-sm{display:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Dashboard de Fechamento — Bônus</h1>
+    <p>Só Tintas · consolidado dos simuladores enviados pelos vendedores (dado autodeclarado — vale o fechamento oficial)</p>
+  </div>
+</header>
+<main>
+  <div id="aviso"></div>
+
+  <div class="filtros">
+    <div><label>Mês</label><select id="fMes"><option value="">Todos</option></select></div>
+    <div><label>Supervisor</label><select id="fSup"><option value="">Todos</option></select></div>
+    <div><label>Loja</label><select id="fLoja"><option value="">Todas</option></select></div>
+    <button class="btn" onclick="carregar()">Atualizar</button>
+    <span class="upd" id="upd"></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Por loja</h2>
+  <table id="tabLoja"><thead><tr>
+    <th>Loja</th><th>Supervisor</th><th class="r">Vend.</th><th class="r">Alcance médio</th>
+    <th class="r">Garantido</th><th class="r">Na mesa</th><th class="r">Projetado</th><th>Ritmo</th>
+  </tr></thead><tbody></tbody></table>
+
+  <h2>Ranking</h2>
+  <div class="filtros" style="margin-bottom:10px">
+    <div><label>Ranquear por</label><select id="rankBy">
+      <option value="vendedor">Vendedor</option>
+      <option value="loja">Loja</option>
+      <option value="supervisor">Supervisor</option>
+    </select></div>
+    <div><label>Critério</label><select id="rankMetric">
+      <option value="mesa">Dinheiro na mesa (R$)</option>
+      <option value="garantido">Garantido (R$)</option>
+      <option value="alc">Alcance médio (%)</option>
+      <option value="projetado">Projetado (R$)</option>
+    </select></div>
+    <span class="upd" id="rankCap"></span>
+  </div>
+  <table id="tabRank"><thead></thead><tbody></tbody></table>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<script>
+/* ====== CONFIG ======
+   Cole aqui a MESMA URL /exec do seu Apps Script (a do botão "Enviar para o gerente").
+   Deixe em branco ('') para ver o dashboard com dados de exemplo.            */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxgEzkP3zdwbhOq-fPrH0BUAbcMDXlffUVwuuC5cGjxiGimUPeY4BxOrYegaRAf4jW2/exec';
+
+/* ------- utilidades ------- */
+const brl = v => (isFinite(v)?v:0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct = v => (isFinite(v)?v:0).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+function num(v){
+  if(v===null||v===undefined) return 0;
+  if(typeof v==='number') return v;
+  let s=String(v).replace(/[R$\s%]/g,'');
+  if(s.indexOf(',')>-1 && s.indexOf('.')>-1) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.indexOf(',')>-1) s=s.replace(',','.');
+  const n=parseFloat(s); return isNaN(n)?0:n;
+}
+function contaLista(s){ if(!s) return 0; return String(s).split('|').map(x=>x.trim()).filter(Boolean).length; }
+function corAlc(a){ return a>=100?'p-ok':a>=95?'p-am':a>=80?'p-am':'p-no'; }
+function corBar(a){ return a>=100?'var(--ok)':a>=95?'#5AA469':a>=80?'#E0A200':'#C0392B'; }
+
+/* ------- normaliza uma linha crua da planilha ------- */
+function normaliza(r){
+  const alcVend = r.alcVendNum!==''&&r.alcVendNum!=null ? num(r.alcVendNum)
+                 : (num(r.meta)>0 ? num(r.faturado)/num(r.meta)*100 : num(r.alcVend));
+  return {
+    nome: r.nome||'(sem nome)', login:r.login||'', filial:String(r.filial||'—'),
+    supervisor: r.supervisor||'—', mes: r.mes||'—',
+    alcVend: alcVend,
+    alcLoja: r.alcLojaNum!==''&&r.alcLojaNum!=null ? num(r.alcLojaNum) : num(r.alcLoja),
+    garantido: num(r.ganhoHoje), teto: num(r.potencial), naMesa: num(r.faltaBuscar),
+    projetado: r.projetadoNum!==''&&r.projetadoNum!=null ? num(r.projetadoNum) : num(r.projetado),
+    pend: contaLista(r.pendentes), atg: contaLista(r.atingidos),
+    ts: r.timestamp||''
+  };
+}
+
+/* ------- agrega segundo os filtros ------- */
+function computeAgg(rowsRaw, filtros){
+  filtros = filtros||{};
+  let rows = rowsRaw.map(normaliza);
+  if(filtros.mes) rows = rows.filter(r=>r.mes===filtros.mes);
+  if(filtros.sup) rows = rows.filter(r=>r.supervisor===filtros.sup);
+  if(filtros.loja) rows = rows.filter(r=>r.filial===filtros.loja);
+
+  const kpi = {
+    vend: rows.length,
+    garantido: rows.reduce((s,r)=>s+r.garantido,0),
+    naMesa: rows.reduce((s,r)=>s+r.naMesa,0),
+    projetado: rows.reduce((s,r)=>s+r.projetado,0),
+    alcMedio: rows.length? rows.reduce((s,r)=>s+r.alcVend,0)/rows.length : 0
+  };
+  // por loja
+  const lojasMap = {};
+  rows.forEach(r=>{
+    const k=r.filial; if(!lojasMap[k]) lojasMap[k]={filial:k,sup:r.supervisor,n:0,gar:0,mesa:0,proj:0,alcSum:0};
+    const o=lojasMap[k]; o.n++; o.gar+=r.garantido; o.mesa+=r.naMesa; o.proj+=r.projetado; o.alcSum+=r.alcVend;
+  });
+  const lojas = Object.keys(lojasMap).map(k=>{const o=lojasMap[k]; o.alc=o.n?o.alcSum/o.n:0; return o;})
+                      .sort((a,b)=>b.mesa-a.mesa);
+  // vendedores por prioridade (na mesa desc)
+  const vend = rows.slice().sort((a,b)=>b.naMesa-a.naMesa);
+  return {kpi, lojas, vend, rows};
+}
+
+/* ------- render ------- */
+function render(rowsRaw){
+  window.__ROWS = rowsRaw;
+  // popular filtros (uma vez, a partir do conjunto completo)
+  const all = rowsRaw.map(normaliza);
+  preencheSelect('fMes', unicos(all.map(r=>r.mes)));
+  preencheSelect('fSup', unicos(all.map(r=>r.supervisor)));
+  preencheSelect('fLoja', unicos(all.map(r=>r.filial)));
+
+  const filtros = {mes:val('fMes'), sup:val('fSup'), loja:val('fLoja')};
+  const A = computeAgg(rowsRaw, filtros);
+
+  document.getElementById('kpis').innerHTML =
+    card('Vendedores enviaram', String(A.kpi.vend), '') +
+    card('Garantido (equipe)', brl(A.kpi.garantido), 'g') +
+    card('Na mesa (a buscar)', brl(A.kpi.naMesa), 'd') +
+    card('Projetado (equipe)', brl(A.kpi.projetado), 'p') +
+    card('Alcance médio', pct(A.kpi.alcMedio), '');
+
+  document.querySelector('#tabLoja tbody').innerHTML = A.lojas.length ? A.lojas.map(l=>
+    `<tr><td><b>${l.filial}</b></td><td>${l.sup}</td><td class="r">${l.n}</td>
+     <td class="r"><span class="pill ${corAlc(l.alc)}">${pct(l.alc)}</span></td>
+     <td class="r money">${brl(l.gar)}</td><td class="r mesa">${brl(l.mesa)}</td>
+     <td class="r money">${brl(l.proj)}</td>
+     <td><div class="bar"><i style="width:${Math.min(l.alc,130)/130*100}%;background:${corBar(l.alc)}"></i></div></td></tr>`
+  ).join('') : linhaVazia(8);
+
+  window.__FROWS = A.rows;
+  renderRank(A.rows);
+
+  document.getElementById('foot').textContent =
+    'Dado autodeclarado pelos vendedores no simulador — acompanhamento e coaching, não substitui o fechamento oficial (INDICADORES/META). '+
+    A.kpi.vend+' vendedor(es) no recorte atual.';
+}
+
+/* ------- helpers de UI ------- */
+function card(t,v,cls){ return `<div class="kpi ${cls}"><b>${t}</b><strong class="num">${v}</strong></div>`; }
+function linhaVazia(n){ return `<tr><td colspan="${n}" style="text-align:center;color:var(--muted);padding:18px">Nenhum envio no recorte atual.</td></tr>`; }
+function unicos(a){ return a.filter((x,i)=>x&&a.indexOf(x)===i).sort(); }
+function val(id){ const e=document.getElementById(id); return e?e.value:''; }
+function preencheSelect(id, itens){
+  const s=document.getElementById(id); if(!s) return; const atual=s.value;
+  s.innerHTML='<option value="">'+(id==='fLoja'?'Todas':'Todos')+'</option>'+itens.map(i=>`<option>${i}</option>`).join('');
+  if(itens.indexOf(atual)>-1) s.value=atual;
+}
+function fmtData(ts){ if(!ts) return '—'; const d=new Date(ts); if(isNaN(d)) return String(ts); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+
+/* ------- ranking flexível ------- */
+function agrupaRank(rows, by){
+  if(by==='vendedor'){
+    return rows.map(r=>({label:r.nome, login:r.login, sub:r.filial+' · '+r.supervisor, n:1,
+      gar:r.garantido, mesa:r.naMesa, proj:r.projetado, alc:r.alcVend}));
+  }
+  const key = by==='loja' ? 'filial' : 'supervisor';
+  const m={};
+  rows.forEach(r=>{ const k=r[key]||'—';
+    if(!m[k]) m[k]={label:k, login:'', n:0, gar:0, mesa:0, proj:0, alcSum:0, ex:{}};
+    const o=m[k]; o.n++; o.gar+=r.garantido; o.mesa+=r.naMesa; o.proj+=r.projetado; o.alcSum+=r.alcVend;
+    o.ex[ by==='loja' ? r.supervisor : r.filial ] = 1; });
+  return Object.keys(m).map(k=>{ const o=m[k]; o.alc = o.n?o.alcSum/o.n:0;
+    o.sub = by==='loja' ? ('sup. '+Object.keys(o.ex).filter(Boolean).join('/'))
+                        : (Object.keys(o.ex).filter(Boolean).length+' loja(s)');
+    return o; });
+}
+const RANK_METRIC={
+  mesa:{f:o=>o.mesa, cap:'Maior oportunidade no topo — onde o coaching rende mais.'},
+  garantido:{f:o=>o.gar, cap:'Quem já garantiu mais bônus.'},
+  alc:{f:o=>o.alc, cap:'Maior alcance médio de meta.'},
+  projetado:{f:o=>o.proj, cap:'Maior projeção de fechamento do mês.'}
+};
+function renderRank(rows){
+  rows = rows||[];
+  const by = val('rankBy')||'vendedor';
+  const metric = val('rankMetric')||'mesa';
+  const M = RANK_METRIC[metric]||RANK_METRIC.mesa;
+  const grupos = agrupaRank(rows, by).sort((a,b)=>M.f(b)-M.f(a));
+  const capEl=document.getElementById('rankCap'); if(capEl) capEl.textContent=M.cap;
+  const nomeCol = by==='vendedor'?'Vendedor':by==='loja'?'Loja':'Supervisor';
+  const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'º';
+  const hl=k=>metric===k?' hl':'';
+  const head='<tr><th style="width:44px">#</th><th>'+nomeCol+'</th>'+
+    '<th class="hide-sm">'+(by==='vendedor'?'Loja · Sup.':'Contexto')+'</th>'+
+    (by==='vendedor'?'':'<th class="r">Vend.</th>')+
+    '<th class="r'+hl('alc')+'">Alcance</th><th class="r'+hl('garantido')+'">Garantido</th>'+
+    '<th class="r'+hl('mesa')+'">Na mesa</th><th class="r'+hl('projetado')+'">Projetado</th></tr>';
+  const body = grupos.length ? grupos.map((o,i)=>
+    '<tr><td class="pos">'+medal(i)+'</td>'+
+    '<td><b>'+o.label+'</b>'+(o.login?' <span style="color:var(--muted);font-size:11px">·'+o.login+'</span>':'')+'</td>'+
+    '<td class="hide-sm" style="color:var(--muted);font-size:11.5px">'+(o.sub||'')+'</td>'+
+    (by==='vendedor'?'':'<td class="r">'+o.n+'</td>')+
+    '<td class="r'+hl('alc')+'"><span class="pill '+corAlc(o.alc)+'">'+pct(o.alc)+'</span></td>'+
+    '<td class="r money'+hl('garantido')+'">'+brl(o.gar)+'</td>'+
+    '<td class="r mesa'+hl('mesa')+'">'+brl(o.mesa)+'</td>'+
+    '<td class="r money'+hl('projetado')+'">'+brl(o.proj)+'</td></tr>'
+  ).join('') : linhaVazia(by==='vendedor'?7:8);
+  const t=document.getElementById('tabRank');
+  t.querySelector('thead').innerHTML=head;
+  t.querySelector('tbody').innerHTML=body;
+}
+
+/* ------- carregamento (JSONP) + fallback mock ------- */
+const MOCK = [
+  {nome:'Maria Silva',login:'456',filial:'013',supervisor:'BRUNO',mes:'2026-07',nivelIdx:0,alcLojaNum:96,alcVendNum:77.5,meta:'80000',faturado:'62000',projetadoNum:'82460',ganhoHoje:'400',potencial:'2280',faltaBuscar:'1880',atingidos:'Bônus de Performance',pendentes:'Meta de Faturamento|Faturamento CNPJ|Meta de Time|Meta CNPJ',timestamp:'2026-07-24T14:10:00Z'},
+  {nome:'João Pereira',login:'451',filial:'013',supervisor:'BRUNO',mes:'2026-07',nivelIdx:0,alcLojaNum:96,alcVendNum:88,meta:'75000',faturado:'66000',projetadoNum:'85000',ganhoHoje:'620',potencial:'2100',faltaBuscar:'1480',atingidos:'Bônus de Performance|Meta de Faturamento',pendentes:'Faturamento CNPJ|Clientes Novos CNPJ|Meta CNPJ',timestamp:'2026-07-25T09:20:00Z'},
+  {nome:'Carla Farias',login:'460',filial:'013',supervisor:'BRUNO',mes:'2026-07',nivelIdx:0,alcLojaNum:96,alcVendNum:104,meta:'90000',faturado:'93600',projetadoNum:'120000',ganhoHoje:'1650',potencial:'1770',faltaBuscar:'120',atingidos:'Meta de Faturamento|Performance|CPF|CNPJ',pendentes:'Super Meta',timestamp:'2026-07-25T10:05:00Z'},
+  {nome:'Rafael Souza',login:'322',filial:'022',supervisor:'BRUNO',mes:'2026-07',nivelIdx:1,alcLojaNum:92,alcVendNum:70,meta:'55000',faturado:'38500',projetadoNum:'51000',ganhoHoje:'0',potencial:'1600',faltaBuscar:'1600',atingidos:'',pendentes:'Meta de Faturamento|Performance|CPF|CNPJ|Meta de Time',timestamp:'2026-07-23T16:40:00Z'},
+  {nome:'Aline Costa',login:'318',filial:'022',supervisor:'BRUNO',mes:'2026-07',nivelIdx:1,alcLojaNum:92,alcVendNum:99,meta:'60000',faturado:'59400',projetadoNum:'78000',ganhoHoje:'980',potencial:'1600',faltaBuscar:'620',atingidos:'Meta 1|Performance|CPF',pendentes:'Meta CNPJ|Clientes Novos CNPJ',timestamp:'2026-07-25T08:30:00Z'},
+  {nome:'Diego Alves',login:'201',filial:'007',supervisor:'BRUNO',mes:'2026-07',nivelIdx:2,alcLojaNum:88,alcVendNum:83,meta:'45000',faturado:'37350',projetadoNum:'49000',ganhoHoje:'350',potencial:'1200',faltaBuscar:'850',atingidos:'Performance',pendentes:'Meta de Faturamento|CPF|Meta de Time',timestamp:'2026-07-24T11:15:00Z'}
+];
+
+function setAviso(txt,err){ const a=document.getElementById('aviso'); if(!txt){a.style.display='none';return;} a.style.display='block'; a.className='aviso'+(err?' err':''); a.innerHTML=txt; }
+
+function carregar(){
+  if(!API_URL){
+    render(MOCK);
+    setAviso('⚙️ <b>Modo exemplo.</b> Cole a URL /exec do seu Apps Script na constante <code>API_URL</code> (topo do &lt;script&gt;) para puxar os envios reais.');
+    document.getElementById('upd').textContent='dados de exemplo';
+    return;
+  }
+  const cb='__cb'+Date.now();
+  const t=setTimeout(function(){ setAviso('Não consegui carregar os dados. Confira a URL e se a implantação está como "Qualquer pessoa".',true); render(MOCK); }, 12000);
+  window[cb]=function(res){ clearTimeout(t); delete window[cb];
+    if(res&&res.ok&&res.rows){ setAviso(''); render(res.rows);
+      document.getElementById('upd').textContent='atualizado '+fmtData(res.geradoEm||new Date().toISOString()); }
+    else { setAviso('Resposta inesperada da API.',true); render(MOCK); } };
+  const s=document.createElement('script');
+  s.src=API_URL+'?action=list&callback='+cb+'&t='+Date.now();
+  s.onerror=function(){ clearTimeout(t); setAviso('Falha de rede ao chamar a API.',true); render(MOCK); };
+  document.body.appendChild(s);
+}
+
+['fMes','fSup','fLoja'].forEach(id=>document.getElementById(id).addEventListener('change',()=>render(window.__ROWS||[])));
+['rankBy','rankMetric'].forEach(id=>document.getElementById(id).addEventListener('change',()=>renderRank(window.__FROWS||[])));
+carregar();
+</script>
+</body>
+</html>
