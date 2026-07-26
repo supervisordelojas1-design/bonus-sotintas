@@ -1709,6 +1709,14 @@ function montaTextoWhats(nDet, nAcoes){
     if(l.st.s!=='ok' && l.falta && l.falta!=='—') t+=` (falta: ${l.falta})`;
     t+='\n';
   }
+  var _gw=DISC_GUIA[raw('vDisc')];
+  if(_gw){
+    t+=`\n*🎯 SEU PERFIL: ${_gw.nome.toUpperCase()} — COMO ATACAR*\n`;
+    t+=`• Força: ${_gw.forca}\n`;
+    t+=`• Cuidado: ${_gw.risco}\n`;
+    t+=`• No balcão: ${_gw.balcao}\n`;
+    t+=`• Na ligação: ${_gw.ligacao}\n`;
+  }
   const pend=LINHAS.filter(l=>l.st.s!=='ok').sort((a,b)=>b.ganha-a.ganha);
   if(pend.length){
     t+=`\n*📋 PLANO DE AÇÃO — ${brl(TOTAIS.buscar)} EM JOGO*\n`;
@@ -1889,9 +1897,30 @@ function agruparPlano(){
 function desenharPaginaPlano(cards, numPagina, total, primeiroIndice){
   const topo=130+30;
   const alturaCards=cards.reduce((s,x)=>s+x.altura+8,0);
-  const {cv,c}=_novaPagina(topo+alturaCards+46);
+  var _g = (primeiroIndice===0) ? DISC_GUIA[raw('vDisc')] : null;
+  var _discLins=[];
+  if(_g){
+    var _mc=_ctxMedida(); _mc.font='11px Arial';
+    var _larg=PAG_W-PAG_P*2-32;
+    [['Força',_g.forca],['Cuidado',_g.risco],['No balcão',_g.balcao],['Na ligação',_g.ligacao]].forEach(function(par){
+      _quebra(_mc, par[0]+': '+par[1], _larg).forEach(function(t){ _discLins.push(t); });
+    });
+  }
+  var _discH = _g ? (26 + _discLins.length*14 + 16) : 0;
+  const {cv,c}=_novaPagina(topo+alturaCards+46+_discH);
   let y=_cabecalho(c,'PLANO DE AÇÃO',
         'O que fazer para destravar '+brl(TOTAIS.buscar)+' que ainda estão na mesa   ·   página '+numPagina+' de '+total);
+  if(_g){
+    var bx=PAG_P, bw=PAG_W-PAG_P*2, bh=_discH-8;
+    c.fillStyle='#EEF2F8'; _rr(c,bx,y,bw,bh,9); c.fill();
+    c.fillStyle=_g.cor; c.fillRect(bx,y+2,5,bh-4);
+    var yy=y+18;
+    c.fillStyle='#1F3864'; c.font='bold 12px Arial';
+    c.fillText('SEU PERFIL: '+_g.nome.toUpperCase()+' — COMO ATACAR', bx+16, yy); yy+=16;
+    c.font='11px Arial'; c.fillStyle='#22304A';
+    _discLins.forEach(function(t){ c.fillText(t, bx+16, yy); yy+=14; });
+    y += bh + 10;
+  }
   c.fillStyle='#1F3864'; c.font='bold 13px Arial';
   c.fillText('PRIORIDADES — DA QUE MAIS PAGA PARA A QUE MENOS PAGA',PAG_P,y); y+=24;
   let n=primeiroIndice;
