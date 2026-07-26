@@ -22,11 +22,18 @@
   body.view-resumo{padding-bottom:16px}
   .num{font-variant-numeric:tabular-nums}
 
-  header{background:var(--navy);color:#fff;padding:20px 16px 16px;border-bottom:5px solid var(--red)}
-  .wrap{max-width:860px;margin:0 auto}
-  header h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(20px,4.5vw,28px);
-            letter-spacing:.3px;text-transform:uppercase}
-  header p{opacity:.85;font-size:13px;margin-top:4px}
+  header{background:linear-gradient(135deg,#1F3864 0%,#2A4A85 58%,#16294A 100%);color:#fff;
+          padding:24px 16px 20px;border-bottom:5px solid var(--red);position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;
+          background:radial-gradient(circle,rgba(192,0,0,.30),transparent 70%);pointer-events:none}
+  .wrap{max-width:860px;margin:0 auto;position:relative;z-index:1}
+  .kicker{display:inline-block;font-family:'Archivo',sans-serif;font-weight:800;font-size:11px;
+          letter-spacing:2px;text-transform:uppercase;background:var(--red);color:#fff;
+          padding:4px 12px;border-radius:999px;margin-bottom:10px}
+  header h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(23px,5.2vw,32px);
+            letter-spacing:.3px;text-transform:uppercase;line-height:1.05}
+  header p{opacity:.92;font-size:13.5px;margin-top:8px;max-width:640px;line-height:1.4}
+  header p b{color:#FFE9A8}
 
   main{max-width:860px;margin:0 auto;padding:16px}
   .hint{background:#FFF7DE;border:1px solid #F0DFA0;border-left:4px solid var(--red);
@@ -249,7 +256,12 @@
   .rtab td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top}
   .rtab td:nth-child(4),.rtab td:nth-child(5),.rtab th:nth-child(4),.rtab th:nth-child(5){text-align:right;white-space:nowrap}
   .rtab td:nth-child(3){max-width:120px}
-  .acts{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .acts .btn{width:100%}
+  .acts .full{grid-column:1/-1}
+  .btn-primary{background:linear-gradient(135deg,#C00000,#e11) ;color:#fff;box-shadow:0 4px 14px rgba(192,0,0,.28)}
+  .btn-primary .sub{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:10.5px;
+        text-transform:none;letter-spacing:0;opacity:.92;margin-top:2px}
 
   /* ---------- ESCADA DA META DE FATURAMENTO ---------- */
   .escada{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:6px}
@@ -346,8 +358,9 @@
 <body>
 <header>
   <div class="wrap">
+    <span class="kicker">Só Tintas · Bônus</span>
     <h1>Simulador de Bônus do Vendedor</h1>
-    <p>Só Tintas · preencha seus números e veja o que já ganhou e o que ainda dá para buscar no mês</p>
+    <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
 </header>
 
@@ -503,10 +516,10 @@
     </div>
   </div>
   <div class="acts">
-    <button class="btn btn-ghost" onclick="verForm()">← Editar dados</button>
-    <button class="btn btn-navy" id="btnPdf" onclick="salvarPdf()">📄 Salvar / compartilhar</button>
-    <button class="btn btn-wa" id="btnWa" onclick="enviarWhats()">📲 Enviar resumo via WhatsApp</button>
-    <button class="btn btn-red" id="btnGer" onclick="enviarGerente()">📤 Enviar para o gerente</button>
+    <button class="btn btn-primary full" id="btnGer" onclick="enviarGerente()">📤 Enviar para o Supervisor<span class="sub">registra seus números e entra no ranking</span></button>
+    <button class="btn btn-navy" id="btnPdf" onclick="salvarPdf()">📄 Salvar / PDF</button>
+    <button class="btn btn-wa" id="btnWa" onclick="enviarWhats()">📲 WhatsApp</button>
+    <button class="btn btn-ghost full" onclick="verForm()">← Editar dados</button>
   </div>
 </div>
 
@@ -1668,7 +1681,7 @@ function enviarGerente(){
   if(!aberto){
     // pop-up bloqueado: envia em segundo plano por imagem (o registro é gravado do mesmo jeito)
     const img=new Image(); img.src=url;
-    setTimeout(()=>alert('Simulação enviada para o gerente!\n\n'+d.nome+' · filial '+d.filial+
+    setTimeout(()=>alert('Simulação enviada para o seu Supervisor!\n\n'+d.nome+' · filial '+d.filial+
       (d.supervisor?' · sup. '+d.supervisor:'')), 900);
   }
   setTimeout(()=>{ btn.textContent=original; btn.disabled=false; }, 1500);
