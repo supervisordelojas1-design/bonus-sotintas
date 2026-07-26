@@ -190,6 +190,22 @@
   .mpos h3{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin-bottom:6px}
   .mpos .big{font-family:'Archivo',sans-serif;font-size:22px;color:var(--navy)}
   .mpos .lin{font-size:12.5px;color:var(--ink);margin-top:4px}
+  .disc{background:#EEF2F8;border:1px solid var(--line);border-left:5px solid var(--navy);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+  .disc h4{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin-bottom:6px}
+  .disc .dl{font-size:12.5px;color:var(--ink);margin-bottom:4px} .disc .dl b{color:var(--navy)}
+  .disc-empty{border-left-color:var(--warn);background:var(--warn-bg);font-size:12.5px;color:var(--ink)}
+  .ferr-final{background:#F7F9FD;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
+  .ferr-final>h4{font-family:'Archivo',sans-serif;font-size:14px;letter-spacing:.4px;text-transform:uppercase;color:var(--navy);border-bottom:2px solid var(--red);padding-bottom:4px;margin-bottom:4px}
+  .ferr-final .ff-sub{font-size:12px;color:var(--muted);margin-bottom:8px}
+  @media (max-width:640px){
+    input,select{font-size:16px}
+    .btn{padding:13px 16px}
+    .ese-grid{grid-template-columns:1fr}
+    .prob{min-width:0;padding:9px} .prob .pv{font-size:20px} .prob-wrap{gap:6px}
+    .hero-n{min-width:0}
+    .kpi strong{font-size:22px}
+    .acao li{font-size:13px}
+  }
 
   footer.total{position:fixed;left:0;right:0;bottom:0;background:var(--navy);color:#fff;
         border-top:4px solid var(--red);padding:10px 16px;z-index:50}
@@ -359,6 +375,7 @@
       <label><span>Filial *</span><select id="vFilial"></select></label>
       <label><span>Supervisor</span><input id="vSup" type="text" readonly tabindex="-1"
              style="background:#EEF2F8;font-weight:700;color:var(--muted)"></label>
+      <label><span>Perfil DISC</span><select id="vDisc"><option value="">Selecione…</option><option>Executor</option><option>Comunicador</option><option>Planejador</option><option>Analista</option></select></label>
       <label><span>Mês de referência</span><input id="mesRef" type="month" value="2026-07"></label>
     </div>
   </fieldset>
@@ -1136,6 +1153,8 @@ function calc(){
              'Os 4 indicadores CPF são comportamento diário, não sorte: pedir CPF, oferecer complementar, subir de linha e segurar desconto.'],
       ferr:['escada','prompts']}
   };
+  var EXTRA_ARGS = {"Meta de Faturamento": ["Trabalhe a fila do pico: um “já te atendo” com um orçamento adiantado evita perder a venda para a loja ao lado.", "Reative quem sumiu: quem comprou tinta há 8–12 meses já está na hora de repintar uma área — uma ligação traz de volta.", "Feche o combo obra: quem leva tinta de parede quase sempre precisa de teto, esmalte e preparação — pergunte o cômodo inteiro.", "Use a meta diária como bússola: divida o que falta pelos dias úteis e persiga esse número todo dia, sem deixar acumular.", "Anote o motivo de cada “não” (preço, cor ou prazo): saber a objeção real é o que faz a próxima venda fechar."], "Bônus de Performance": ["Peça ao gerente para ver sua média 90 dias toda semana — acompanhar de perto evita a surpresa ruim no fechamento.", "Um mês fraco puxa a média por 90 dias: se começar devagar, compense já na semana seguinte.", "Atendimento com cadastro e complementar vira ticket maior, e ticket maior sustenta a média que define seu nível.", "Combine com um colega uma dupla de cobrança: um lembra o outro das metas do dia. Constância se sustenta em time.", "Trate cada cliente novo como semente de recorrência — é a base que segura sua média nos meses seguintes."], "% Identificadas (CPF)": ["Deixe o cadastro rápido: peça só nome, CPF e telefone na abertura; o resto preenche depois, sem travar o atendimento.", "Faça virar hábito da equipe: quem pede CPF em 100% dos atendimentos nunca fica refém da reta final do mês.", "Explique o benefício: “seu cadastro guarda a cor e te avisa das promoções” — o cliente vê vantagem, não burocracia.", "No pintor e no CNPJ, o cadastro vale ouro: é o que te dá o direito de ligar antes da próxima obra.", "Meça por período do dia: se a manhã teve menos CPF, ajuste a abordagem no turno seguinte."], "Itens CPF": ["Monte kits prontos (pintura de parede, de portão, de teto): mostrar o kit vende mais que perguntar item por item.", "Pergunte da aplicação: sem rolo, bandeja e fita o serviço não sai — o complementar é necessidade, não empurro.", "Ofereça o de maior valor primeiro (rolo profissional antes do comum): a ancoragem sobe o item médio.", "Lembre da limpeza e proteção: lona, aguarrás, estopa e removedor entram na mesma sacola.", "No fechamento, pergunte: “vai faltar alguma coisa para começar hoje?” — costuma somar mais um item."], "$ Ticket CPF": ["Suba o tamanho da embalagem: 3 galões? mostre a lata de 18L com o preço por litro — economia para o cliente, ticket maior para você.", "Ofereça a premium pela durabilidade: “pinta hoje e não mexe por anos” vende mais caro sem parecer caro.", "Venda o ambiente inteiro, não a parede: teto, rodapé, porta e janela no mesmo orçamento.", "Inclua a preparação correta (massa, selador, lixa): serviço bem-feito é ticket maior e cliente satisfeito.", "Apresente 3 opções (boa/melhor/premium): a maioria escolhe a do meio e o ticket médio sobe sozinho."], "% Desconto CPF": ["Silêncio vende: apresentou o preço, espere o cliente falar. Quem fala primeiro costuma dar desconto sem precisar.", "Troque desconto por brinde de acessório, tingimento na hora ou entrega — mantém a margem e o cliente percebe ganho.", "Mostre o custo por ano de pintura: dividido pela durabilidade, a premium sai mais barata que a econômica.", "Padronize sua régua: se você não cede fácil, o cliente para de pedir. Desconto vira exceção, não regra.", "Se ceder, peça contrapartida: leva mais um item, fecha à vista ou fecha hoje. Desconto sem troca é margem doada."], "Faturamento CNPJ": ["Mapeie o entorno: liste condomínios, obras, comércios e igrejas num raio de 3 km e visite 2 por semana.", "Fale a língua da empresa: prazo, nota, reserva de lote e previsibilidade pesam mais que centavo no litro.", "Ofereça atendimento dedicado: um contato só seu, WhatsApp direto — empresa valoriza quem resolve rápido.", "Programe a recompra: obra tem etapas; agende a entrega da próxima fase antes de o material acabar.", "Peça indicação dentro da própria empresa: quem compra para um setor conhece quem compra para outro."], "% Desconto CNPJ": ["Trabalhe por tabela de volume: o cliente sobe o pedido para pegar a faixa melhor e você protege a margem.", "Ofereça prazo em vez de preço: para o caixa da empresa, prazo às vezes vale mais que desconto.", "Justifique com serviço: reserva de cor, entrega no local e material garantido substituem o desconto.", "Compare rendimento: tinta profissional cobre mais m² por litro; no total da obra sai mais barata.", "Todo desconto com contrapartida: volume, à vista ou recompra. Desconto sem troca é margem doada."], "Clientes Positivados CNPJ": ["Faça a régua dos 30 dias: quem não comprou este mês entra na lista de ligação de hoje — positivar é reativar.", "Use a data da obra: pergunte a fase e ligue na hora da reposição, antes de comprarem fora.", "Meta diária de contatos (5/dia = 100+/mês): positivação é jogo de volume de ligação.", "Dê um motivo para voltar: novidade, promoção da linha ou lançamento — sempre um gancho para a próxima compra.", "Cuide da carteira como jardim: cliente sem contato há 60 dias esfria; ligação curta mantém ativo."], "Clientes Novos CNPJ": ["Defina cota semanal de portas novas: 3 visitas de prospecção por semana já enchem a faixa no mês.", "Leve caso de sucesso: “atendo o condomínio X, entrego no prazo” — prova social abre porta de empresa.", "Abra conta na primeira venda, mesmo pequena: pedido pequeno já conta para a faixa e vira recorrência.", "Use o pintor como ponte: ele conhece o dono da obra antes de todo mundo — peça a apresentação.", "Segmente por tipo (construtora, condomínio, comércio): cada um tem uma dor; adapte a proposta e feche mais rápido."], "Meta CNPJ": ["Foque nas 3 contas mais quentes com obra andando: fecham mais rápido que prospecção nova no fim do mês.", "Antecipe a reposição das obras em acabamento — é faturamento certo esperando um telefonema.", "Ofereça a linha profissional nos pedidos grandes: mesmo cliente, volume maior, meta mais perto.", "Feche pedido programado: entra no faturamento do mês e a obra recebe conforme a etapa.", "Combine com o gerente uma condição especial para as contas decisivas do mês."], "Meta de Time": ["Some esforço: ajude o colega mais perto de virar a meta — quando a loja bate, todos recebem.", "Divida o gap da loja pelos dias e pelas pessoas: o número por vendedor é menor do que parece.", "Cubram os horários de pico juntos: loja bem atendida no movimento é onde a meta coletiva se resolve.", "Garanta primeiro os seus 90% individuais — é o pré-requisito para você receber o que a loja conquistar.", "Deixe o placar da loja à vista do time: meta coletiva rende mais quando todos enxergam o quanto falta."], "Meta Eucatex (litragem)": ["É tudo ou nada: mire fechar 100% da litragem, não chegar perto. Planeje o mês para bater.", "Priorize latas de 18L nas áreas grandes: litragem se ganha no volume por venda.", "Ofereça a linha Eucatex quando o cliente confirmar o orçamento apertado — fecha a venda e soma litros.", "Condomínio, muro e área comum empurram muita litragem de uma vez — foque essas oportunidades.", "Calcule os litros pela metragem na frente do cliente: quem compra certo fecha a litragem no mês."], "Elite das Vendas CPF": ["Trate os 4 indicadores CPF como rotina diária: pedir CPF, oferecer item, subir de linha e segurar desconto.", "Como vender mais desempata, cada venda trabalha duas vezes: pontua nos indicadores e melhora seu alcance.", "Acompanhe seu placar dos 4 indicadores toda semana — dá tempo de corrigir antes do fechamento.", "Do 1º ao 10º todo mundo ganha: não precisa ser o primeiro, precisa ser constante.", "Peça ao gerente qual indicador está te tirando pontos — ajuste cirúrgico rende posição."]};
+  for(var _k in EXTRA_ARGS){ if(ACOES[_k] && ACOES[_k].acoes && !ACOES[_k].feito){ ACOES[_k].acoes = ACOES[_k].acoes.concat(EXTRA_ARGS[_k]); } }
 
   // ---------- destaques: tudo que o vendedor já conquistou (com quanto superou) ----------
   const DESTAQUES = [];
@@ -1352,7 +1371,7 @@ function verMinhaPosicao(){
 }
 
 // ---------- Persistência dos dados (localStorage) ----------
-const PERSIST_IDS=['vNome','vLogin','vFilial','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
+const PERSIST_IDS=['vNome','vLogin','vFilial','vDisc','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
 function salvaCampos(){ try{ const o={}; PERSIST_IDS.forEach(id=>{const e=document.getElementById(id); if(e) o[id]=e.value;});
   localStorage.setItem('stbonus_campos', JSON.stringify(o)); }catch(_e){} }
 function restauraCampos(){ try{ const raw=localStorage.getItem('stbonus_campos'); if(!raw) return;
@@ -1568,10 +1587,9 @@ function verResumo(){
             <p>A sua loja fatura <b>${Math.round((FOLGA-1)*100)}% acima do piso do nível dela</b>: o fluxo de clientes é maior que a média da rede, então o seu teto também é. Já que os indicadores abaixo estão garantidos, vale mirar um degrau acima:</p>
             <ul>${ESTICAR.map(e=>`<li>${e}</li>`).join('')}</ul></div>`:''}</div>`
     : '';
-  document.getElementById('rPlano').innerHTML = pend.length
+  document.getElementById('rPlano').innerHTML = discBloco() + (pend.length
     ? pend.map((l,k)=>{
         const pl=l.plano||{};
-        const ferrHtml=(pl.ferr||[]).map(f=>htmlFerramenta(FERRAMENTAS[f])).join('');
         return `<div class="acao ${l.st.s==='lock'?'lock':''}">
         <div class="top"><span class="tit">${k+1}. ${l.nome}</span><span class="vale">vale ${brl(l.ganha)}</span></div>
         ${pl.parabens?`<div class="parabens">✔ ${pl.parabens}</div>`:''}
@@ -1583,11 +1601,27 @@ function verResumo(){
             ? 'Indicador já atingido — o pagamento está travado pelo pré-requisito: '+l.gat.split('·').pop().trim()
             : (l.falta && l.falta!=='—' ? 'Falta: '+l.falta : l.st.t)}</div>
         <ul>${(pl.acoes||[]).map(a=>`<li>${a}</li>`).join('')}</ul>
-        ${ferrHtml}
       </div>`;}).join('')
-    : '<div class="tudo-ok">Todos os indicadores atingidos. Excelente mês — agora é manter o ritmo e proteger a margem!</div>';
+    : '<div class="tudo-ok">Todos os indicadores atingidos. Excelente mês — agora é manter o ritmo e proteger a margem!</div>') + ferrFinalHtml();
   document.body.classList.add('view-resumo');
   window.scrollTo({top:0});
+}
+var DISC_GUIA = {"Executor": {"ic": "⚡", "cor": "#C00000", "nome": "Executor", "forca": "velocidade e foco em fechar — você conduz o cliente à decisão sem medo.", "risco": "atropelar etapas e baixar o preço rápido demais. Segure o desconto e ouça a objeção antes de agir.", "balcao": "ofereça a linha de cima primeiro, feche por ambiente completo e leve à decisão com uma pergunta direta.", "ligacao": "seja objetivo: 1 objetivo por ligação, proposta clara e retorno marcado com data."}, "Comunicador": {"ic": "🗣️", "cor": "#BF8F00", "nome": "Comunicador", "forca": "relacionamento e entusiasmo — você cria conexão e gera indicação como ninguém.", "risco": "falar demais e esquecer de fechar e de registrar (CPF/envio). Conduza a conversa até o pedido.", "balcao": "use histórias e prova social (“esse cliente pintou a fachada e adorou”) e transforme simpatia em cadastro.", "ligacao": "mande áudio pessoal, aqueça a relação e peça indicação de obra e de pintor."}, "Planejador": {"ic": "🗓️", "cor": "#1B7A3D", "nome": "Planejador", "forca": "constância e follow-up — você mantém a carteira ativa e não larga o cliente.", "risco": "acomodar no cliente conhecido e evitar prospecção nova. Reserve tempo para abrir contas.", "balcao": "cuide da recorrência: agende a próxima compra e garanta o complementar do serviço.", "ligacao": "crie rotina fixa (segunda para pintores), com lista organizada e horários definidos."}, "Analista": {"ic": "📊", "cor": "#1F3864", "nome": "Analista", "forca": "dados e argumento técnico — rendimento, durabilidade e custo por ano na ponta do lápis.", "risco": "travar na análise e não agir, ou detalhar demais. Depois do dado, parta para o fechamento.", "balcao": "justifique a premium com números: custo por m² e economia ao longo dos anos.", "ligacao": "prepare os dados do cliente antes e mostre a economia com a conta feita."}};
+function discBloco(){
+  var p=raw('vDisc');
+  if(!p || !DISC_GUIA[p]) return '<div class="disc disc-empty">Dica: escolha o seu <b>Perfil DISC</b> em Identificação (Executor, Comunicador, Planejador ou Analista) para receber as orientações no seu estilo.</div>';
+  var g=DISC_GUIA[p];
+  return '<div class="disc" style="border-left-color:'+g.cor+'">'+
+    '<h4>'+g.ic+' Seu perfil: '+g.nome+' — como atacar</h4>'+
+    '<div class="dl"><b>Sua força:</b> '+g.forca+'</div>'+
+    '<div class="dl"><b>Cuidado:</b> '+g.risco+'</div>'+
+    '<div class="dl"><b>No balcão:</b> '+g.balcao+'</div>'+
+    '<div class="dl"><b>Na ligação:</b> '+g.ligacao+'</div></div>';
+}
+function ferrFinalHtml(){
+  return '<div class="ferr-final"><h4>Ferramentas para vender mais</h4>'+
+    '<p class="ff-sub">Use para aumentar o faturamento, subir o ticket médio e fugir da briga de preço — em qualquer indicador acima.</p>'+
+    htmlFerramenta(FERRAMENTAS.escada)+htmlFerramenta(FERRAMENTAS.prompts)+'</div>';
 }
 function verForm(){ document.body.classList.remove('view-resumo'); }
 
