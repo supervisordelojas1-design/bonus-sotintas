@@ -53,6 +53,12 @@
   .bar{height:8px;background:#E5E9F0;border-radius:99px;overflow:hidden;min-width:70px}
   .bar i{display:block;height:100%;border-radius:99px}
   .foot{font-size:11.5px;color:var(--muted);margin:16px 2px 30px}
+  .eng-note{font-size:11.5px;color:var(--muted);margin:-2px 0 8px}
+  .cobranca{background:var(--no-bg);border:1px solid #F3C0C3;border-left:4px solid var(--no);border-radius:12px;padding:12px 14px;margin:6px 0 16px}
+  .cobranca h3{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--no);margin-bottom:6px}
+  .cobranca .chips-nome{display:flex;flex-wrap:wrap;gap:6px}
+  .cobranca .cn{background:#fff;border:1px solid #F3C0C3;border-radius:999px;padding:4px 10px;font-size:12px;color:var(--ink)}
+  .cobranca .ok{color:var(--ok);font-size:12.5px}
   .chk{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;align-self:center}
   .focos{background:var(--warn-bg);border:1px solid #F0DFA0;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;margin-bottom:18px}
   .focos h3{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--warn);margin-bottom:6px}
@@ -108,6 +114,14 @@
     <span class="upd" id="rankCap"></span>
   </div>
   <table id="tabRank"><thead></thead><tbody></tbody></table>
+
+  <h2>Engajamento — acessos (envios) do mês</h2>
+  <p class="eng-note">Cada envio conta como um check-in. Meta: pelo menos 1 acesso/dia. Ordenado por dias com envio.</p>
+  <div class="kpis" id="engKpis"></div>
+  <div id="engFoco" class="cobranca" style="display:none"></div>
+  <table id="tabEng"><thead><tr>
+    <th>Vendedor</th><th class="hide-sm">Loja</th><th class="r">Dias no mês</th><th class="r">Envios</th><th class="hide-sm">Último acesso</th><th>Hoje?</th>
+  </tr></thead><tbody></tbody></table>
 
   <p class="foot" id="foot"></p>
 </main>
@@ -213,6 +227,7 @@ function render(rowsRaw){
   document.getElementById('foot').textContent =
     'Dado autodeclarado pelos vendedores no simulador — acompanhamento e coaching, não substitui o fechamento oficial (INDICADORES/META). '+
     A.kpi.vend+' vendedor(es) no recorte atual.';
+  renderEngajamento();
 }
 
 /* ------- helpers de UI ------- */
@@ -322,11 +337,59 @@ const MOCK = [
   {nome:'Diego Alves',login:'201',filial:'007',supervisor:'BRUNO',mes:'2026-07',nivelIdx:2,alcLojaNum:88,alcVendNum:83,meta:'45000',faturado:'37350',projetadoNum:'49000',ganhoHoje:'350',potencial:'1200',faltaBuscar:'850',atingidos:'Performance',pendentes:'Meta de Faturamento|CPF|Meta de Time',timestamp:'2026-07-24T11:15:00Z'}
 ];
 
+function carregarStats(){
+  if(!API_URL) return;
+  var cb='__st'+Date.now();
+  window[cb]=function(res){ delete window[cb]; if(res&&res.rows){ window.__STATS=res.rows; renderEngajamento(); } };
+  var s=document.createElement('script');
+  s.src=API_URL+'?action=stats&callback='+cb+'&t='+Date.now();
+  s.onerror=function(){};
+  document.body.appendChild(s);
+}
+function renderEngajamento(){
+  var box=document.getElementById('tabEng'); if(!box) return;
+  var stats=window.__STATS||[];
+  var mes=val('fMes'), sup=val('fSup'), loja=val('fLoja');
+  var rows=stats.filter(function(r){ return (!mes||String(r.mes||'')===mes) && (!sup||r.supervisor===sup) && (!loja||String(r.filial)===loja); });
+  var hoje=new Date().toISOString().slice(0,10);
+  function ehHoje(r){ return r.ultimo && String(r.ultimo).slice(0,10)===hoje; }
+  var n=rows.length;
+  var hojeN=rows.filter(ehHoje).length;
+  var mediaDias= n ? (rows.reduce(function(a,r){return a+(+r.dias||0);},0)/n) : 0;
+  var totalEnv= rows.reduce(function(a,r){return a+(+r.envios||0);},0);
+  var kp=document.getElementById('engKpis');
+  if(kp) kp.innerHTML =
+    card('Acessaram hoje', hojeN+' / '+n, hojeN>0?'g':'d')+
+    card('Média de dias no mês', mediaDias.toLocaleString('pt-BR',{maximumFractionDigits:1}), '')+
+    card('Total de envios', String(totalEnv), 'p')+
+    card('Vendedores ativos', String(n), '');
+  var ord=rows.slice().sort(function(a,b){ return (+b.dias||0)-(+a.dias||0) || String(b.ultimo||'').localeCompare(String(a.ultimo||'')); });
+  box.querySelector('tbody').innerHTML = ord.length ? ord.map(function(r){
+    var hj=ehHoje(r);
+    return '<tr><td><b>'+(r.emoji||'')+' '+(r.nome||'—')+'</b></td>'+
+      '<td class="hide-sm">'+(r.filial||'—')+'</td>'+
+      '<td class="r">'+(r.dias||0)+'</td>'+
+      '<td class="r">'+(r.envios||0)+'</td>'+
+      '<td class="hide-sm" style="color:var(--muted);font-size:11.5px">'+fmtData(r.ultimo)+'</td>'+
+      '<td><span class="pill '+(hj?'p-ok':'p-no')+'">'+(hj?'Sim':'Não')+'</span></td></tr>';
+  }).join('') : linhaVazia(6);
+  var fx=document.getElementById('engFoco');
+  if(fx){
+    var naoHoje=rows.filter(function(r){return !ehHoje(r);}).sort(function(a,b){return String(a.nome||'').localeCompare(String(b.nome||''));});
+    fx.style.display='block';
+    if(!n){ fx.innerHTML='<h3>Cobrança rápida</h3><div class="ok">Sem envios no recorte ainda.</div>'; }
+    else if(!naoHoje.length){ fx.innerHTML='<h3>Cobrança rápida</h3><div class="ok">🎉 Todos acessaram hoje! Time 100% engajado.</div>'; }
+    else { fx.innerHTML='<h3>Não acessaram hoje ('+naoHoje.length+' de '+n+')</h3><div class="chips-nome">'+
+      naoHoje.map(function(r){return '<span class="cn">'+(r.emoji||'')+' '+(r.nome||'—')+' · '+(r.filial||'—')+'</span>';}).join('')+'</div>'; }
+  }
+}
 function setAviso(txt,err){ const a=document.getElementById('aviso'); if(!txt){a.style.display='none';return;} a.style.display='block'; a.className='aviso'+(err?' err':''); a.innerHTML=txt; }
 
 function carregar(){
   if(!API_URL){
     render(MOCK);
+    window.__STATS = MOCK.map(function(r){ return {nome:r.nome, filial:r.filial, supervisor:r.supervisor, emoji:r.emoji||'🎨', mes:r.mes, envios:1, dias:1, ultimo:r.timestamp}; });
+    renderEngajamento();
     setAviso('⚙️ <b>Modo exemplo.</b> Cole a URL /exec do seu Apps Script na constante <code>API_URL</code> (topo do &lt;script&gt;) para puxar os envios reais.');
     document.getElementById('upd').textContent='dados de exemplo';
     return;
@@ -334,7 +397,7 @@ function carregar(){
   const cb='__cb'+Date.now();
   const t=setTimeout(function(){ setAviso('Não consegui carregar os dados. Confira a URL e se a implantação está como "Qualquer pessoa".',true); render(MOCK); }, 12000);
   window[cb]=function(res){ clearTimeout(t); delete window[cb];
-    if(res&&res.ok&&res.rows){ setAviso(''); render(res.rows);
+    if(res&&res.ok&&res.rows){ setAviso(''); render(res.rows); carregarStats();
       document.getElementById('upd').textContent='atualizado '+fmtData(res.geradoEm||new Date().toISOString()); }
     else { setAviso('Resposta inesperada da API.',true); render(MOCK); } };
   const s=document.createElement('script');
