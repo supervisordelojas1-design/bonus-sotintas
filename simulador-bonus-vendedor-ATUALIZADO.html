@@ -555,7 +555,7 @@
     <div class="rbody"><div id="rankBody"><p class="rk-load">Carregando…</p></div></div>
   </div>
   <div class="acts">
-    <button class="btn btn-navy full" onclick="verRanking()">🔄 Atualizar ranking</button>
+    <button class="btn btn-navy full" onclick="carregaRanking()">🔄 Atualizar ranking</button>
     <button class="btn btn-ghost full" onclick="voltarDoRank()">← Voltar ao resumo</button>
   </div>
 </div>
@@ -1673,12 +1673,18 @@ function ferrFinalHtml(){
     '<p class="ff-sub">Use para aumentar o faturamento, subir o ticket médio e fugir da briga de preço — em qualquer indicador acima.</p>'+
     htmlFerramenta(FERRAMENTAS.escada)+htmlFerramenta(FERRAMENTAS.prompts)+'</div>';
 }
-function voltarDoRank(){ document.body.classList.remove('view-rank'); document.body.classList.add('view-resumo'); window.scrollTo({top:0}); }
+function voltarDoRank(){ if(_rankTimer){clearInterval(_rankTimer);_rankTimer=null;} document.body.classList.remove('view-rank'); document.body.classList.add('view-resumo'); window.scrollTo({top:0}); }
 function corAlcR(a){ return a>=100?'#1B7A3D':a>=95?'#5AA469':a>=80?'#D98A00':'#C0392B'; }
+var _rankTimer=null;
 function verRanking(){
-  var el=document.getElementById('rankBody'); if(!el) return;
   document.body.classList.remove('view-resumo'); document.body.classList.add('view-rank'); window.scrollTo({top:0});
-  el.innerHTML='<p class="rk-load">Carregando ranking…</p>';
+  carregaRanking();
+  if(_rankTimer) clearInterval(_rankTimer);
+  _rankTimer=setInterval(function(){ if(document.body.classList.contains('view-rank')){ carregaRanking(); } else { clearInterval(_rankTimer); _rankTimer=null; } }, 45000);
+}
+function carregaRanking(){
+  var el=document.getElementById('rankBody'); if(!el) return;
+  if(!/rk-h/.test(el.innerHTML||'')) el.innerHTML='<p class="rk-load">Carregando ranking…</p>';
   var filial=String(raw('vFilial')||'—'); var meuLogin=(raw('vLogin')||'').toLowerCase(); var meuNome=raw('vNome')||'Você';
   var meuEmoji=raw('vEmoji')||'🎨'; var meta=N('meta'), fat=N('fat'); var minhaAlc=meta>0?fat/meta*100:0;
   jsonp_(ENVIO_URL+'?action=list', function(res){
@@ -1733,9 +1739,9 @@ function renderRanking(all, filial){
     '<div class="race">'+(corrida||'<p class="rk-load">Sem envios da sua filial neste mês ainda.</p>')+'</div>'+
     '<h3 class="rk-h">Ranking da filial</h3>'+tabela(naFilial,'filial')+
     '<h3 class="rk-h">Ranking da empresa (rede)</h3>'+tabela(empresa,'empresa')+
-    '<p class="note">Ranking por % de alcance da meta, com os envios do mês. Envie o seu (botão Enviar para o Supervisor) para aparecer.</p>';
+    '<p class="note">Ranking por % de alcance da meta, com os envios do mês. Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · atualiza sozinho a cada 45s. Envie o seu (Enviar para o Supervisor) para aparecer.</p>';
 }
-function verForm(){ document.body.classList.remove('view-resumo'); document.body.classList.remove('view-rank'); }
+function verForm(){ if(_rankTimer){clearInterval(_rankTimer);_rankTimer=null;} document.body.classList.remove('view-resumo'); document.body.classList.remove('view-rank'); }
 
 // =====================================================================
 // ENVIO PARA A PLANILHA CENTRAL (Google Apps Script)
@@ -1785,6 +1791,7 @@ function enviarGerente(){
       (d.supervisor?' · sup. '+d.supervisor:'')), 900);
   }
   setTimeout(()=>{ btn.textContent=original; btn.disabled=false; }, 1500);
+  setTimeout(function(){ try{ if(typeof carregaRanking==='function') carregaRanking(); }catch(e){} }, 2500);
 }
 
 // ---------- WhatsApp: resumo + orientações ----------
