@@ -349,6 +349,11 @@ function carregarStats(){
 function renderEngajamento(){
   var box=document.getElementById('tabEng'); if(!box) return;
   var stats=window.__STATS||[];
+  var usandoFallback=false;
+  if(!stats.length && Array.isArray(window.__ROWS) && window.__ROWS.length){
+    usandoFallback=true;
+    stats=window.__ROWS.map(function(r){ return {nome:r.nome||'—', filial:String(r.filial||'—'), supervisor:r.supervisor||'—', emoji:r.emoji||'🎨', mes:String(r.mes||''), envios:'—', dias:'—', ultimo:r.timestamp||''}; });
+  }
   var mes=val('fMes'), sup=val('fSup'), loja=val('fLoja');
   var rows=stats.filter(function(r){ return (!mes||String(r.mes||'')===mes) && (!sup||r.supervisor===sup) && (!loja||String(r.filial)===loja); });
   var hoje=new Date().toISOString().slice(0,10);
@@ -362,7 +367,8 @@ function renderEngajamento(){
     card('Acessaram hoje', hojeN+' / '+n, hojeN>0?'g':'d')+
     card('Média de dias no mês', mediaDias.toLocaleString('pt-BR',{maximumFractionDigits:1}), '')+
     card('Total de envios', String(totalEnv), 'p')+
-    card('Vendedores ativos', String(n), '');
+    card('Vendedores ativos', String(n), '')+
+    (usandoFallback?'<p class="eng-note" style="grid-column:1/-1;color:var(--warn)">Resumo básico (último acesso). Para ver <b>dias no mês</b> e <b>envios</b>, publique o <code>action=stats</code> no Apps Script.</p>':'');
   var ord=rows.slice().sort(function(a,b){ return (+b.dias||0)-(+a.dias||0) || String(b.ultimo||'').localeCompare(String(a.ultimo||'')); });
   box.querySelector('tbody').innerHTML = ord.length ? ord.map(function(r){
     var hj=ehHoje(r);
