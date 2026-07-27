@@ -52,6 +52,13 @@
        font:inherit;font-weight:700;color:var(--navy);background:#FFFBEA}
   input::placeholder{color:#B8BFCD;font-weight:400}
   input:focus,select:focus{outline:3px solid rgba(31,56,100,.25);border-color:var(--navy)}
+  #vNome,#vLogin{text-transform:uppercase}
+  .adorn{position:relative;display:block}
+  .adorn>input{width:100%}
+  .adorn[data-pre]::before{content:attr(data-pre);position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:13px;pointer-events:none}
+  .adorn[data-pre]>input{padding-left:38px}
+  .adorn[data-suf]::after{content:attr(data-suf);position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:13px;pointer-events:none}
+  .adorn[data-suf]>input{padding-right:30px}
 
   .wcampo{display:block;font-size:11px;font-weight:600;color:var(--no);margin-top:3px;line-height:1.3}
   .wcampo.ok{color:var(--ok)}
@@ -380,7 +387,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v3</span>
+    <span class="kicker">Só Tintas · Bônus · v5</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -411,7 +418,7 @@
       <label><span>Filial *</span><select id="vFilial"></select></label>
       <label><span>Supervisor</span><input id="vSup" type="text" readonly tabindex="-1"
              style="background:#EEF2F8;font-weight:700;color:var(--muted)"></label>
-      <label><span>Perfil DISC</span><select id="vDisc"><option value="">Selecione…</option><option>Executor</option><option>Comunicador</option><option>Planejador</option><option>Analista</option></select></label>
+      <label><span>Perfil DISC *</span><select id="vDisc"><option value="">Selecione…</option><option>Executor</option><option>Comunicador</option><option>Planejador</option><option>Analista</option></select></label>
       <label><span>Seu emoji na corrida</span><select id="vEmoji"><option>🎨</option><option>🚀</option><option>🔥</option><option>💪</option><option>🏆</option><option>⭐</option><option>🐺</option><option>🦁</option><option>⚡</option><option>🎯</option></select></label>
       <label><span>Mês de referência</span><input id="mesRef" type="month" value="2026-07"></label>
     </div>
@@ -420,15 +427,15 @@
   <fieldset>
     <legend>A · Seus dados</legend>
     <div class="grid">
-      <label><span>Média 90 dias da LOJA (R$)</span><input id="med90Loja" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_med90Loja"></small></label>
+      <label><span>Média 90 dias da LOJA</span><input id="med90Loja" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_med90Loja"></small></label>
       <label><span>Nível da sua loja</span>
         <select id="loja"><option value="0">Nível 3 — Ouro</option><option value="1">Nível 2 — Prata</option><option value="2">Nível 1 — Bronze</option></select><small class="wcampo ok" id="w_loja"></small></label>
       <label><span>% alcance da loja</span><input id="alcLoja" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_alcLoja"></small></label>
       <label><span>Contagem de estoque em dia?</span>
         <select id="contagem"><option value="SIM">Sim</option><option value="NAO">Não</option></select></label>
-      <label><span>Sua média 90 dias (R$)</span><input id="med90" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_med90"></small></label>
-      <label><span>Sua meta do mês (R$)</span><input id="meta" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_meta"></small></label>
-      <label><span>Seu faturado até hoje (R$)</span><input id="fat" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_fat"></small></label>
+      <label><span>Sua média 90 dias</span><input id="med90" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_med90"></small></label>
+      <label><span>Sua meta do mês</span><input id="meta" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_meta"></small></label>
+      <label><span>Seu faturado até hoje</span><input id="fat" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_fat"></small></label>
       <label><span>Dias úteis já trabalhados</span><input id="diasDec" type="number" inputmode="numeric" placeholder="0"></label>
       <label><span>Dias úteis totais do mês</span><input id="diasTot" type="number" inputmode="numeric" placeholder="0"></label>
     </div>
@@ -439,14 +446,14 @@
     <div class="grid">
       <label><span>% de vendas identificadas (CPF)</span><input id="ident" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_ident"></small></label>
       <label><span>Itens por atendimento (CPF)</span><input id="itens" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_itens"></small></label>
-      <label><span>Ticket médio CPF (R$)</span><input id="ticket" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_ticket"></small></label>
+      <label><span>Ticket médio CPF</span><input id="ticket" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_ticket"></small></label>
       <label><span>% de desconto CPF</span><input id="descCpf" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_descCpf"></small></label>
-      <label><span>Faturamento CNPJ (R$)</span><input id="fatCnpj" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_fatCnpj"></small></label>
+      <label><span>Faturamento CNPJ</span><input id="fatCnpj" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_fatCnpj"></small></label>
       <label><span>% de desconto CNPJ</span><input id="descCnpj" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_descCnpj"></small></label>
       <label><span>Clientes CNPJ positivados</span><input id="posit" type="number" inputmode="numeric" placeholder="0"><small class="wcampo" id="w_posit"></small></label>
       <label><span>Clientes NOVOS CNPJ</span><input id="novosCnpj" type="number" inputmode="numeric" placeholder="0"><small class="wcampo" id="w_novosCnpj"></small></label>
       <label><span>% de positivação da carteira</span><input id="pctPosit" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_pctPosit"></small></label>
-      <label><span>Sua meta CNPJ (R$)</span><input id="metaCnpj" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_metaCnpj"></small></label>
+      <label><span>Sua meta CNPJ</span><input id="metaCnpj" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_metaCnpj"></small></label>
     </div>
   </fieldset>
 
@@ -1373,13 +1380,13 @@ function jsonp_(url, cb){
     var name='__mp'+Math.floor(Math.random()*1e9);
     var s=document.createElement('script');
     var done=false;
-    var fim=function(r){ if(done) return; done=true; try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r); };
+    var fim=function(r,motivo){ if(done) return; done=true; try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r,motivo); };
     window[name]=function(r){ fim(r); };
-    s.onerror=function(){ fim(null); };
+    s.onerror=function(){ fim(null,'bloqueado'); };
     s.src=url+(url.indexOf('?')>-1?'&':'?')+'callback='+name+'&t='+Date.now();
     document.body.appendChild(s);
-    setTimeout(function(){ fim(null); }, 12000); // se o endereço estiver fora do ar, não trava
-  }catch(e){ cb(null); }
+    setTimeout(function(){ fim(null,'demorou'); }, 20000); // cold-start do Apps Script pode demorar
+  }catch(e){ cb(null,'erro'); }
 }
 function nfil_(v){ if(v===null||v===undefined) return ''; var n=Number(v); return (v!==''&&!isNaN(n))?String(n):String(v).trim(); }
 function numB_(v){ if(v==null) return 0; if(typeof v==='number') return v;
@@ -1603,6 +1610,12 @@ function renderEse(){
 
 // ---------- página de resumo ----------
 function verResumo(){
+  if(!raw('vNome')||!raw('vLogin')||!raw('vFilial')||!raw('vDisc')){
+    var falta=!raw('vNome')?'vNome':(!raw('vLogin')?'vLogin':(!raw('vFilial')?'vFilial':'vDisc'));
+    alert('Para ver o resumo, preencha: NOME, LOGIN, FILIAL e o seu PERFIL DISC.\n\nO perfil DISC deixa as orientacoes personalizadas para o seu jeito de vender.');
+    var e=document.getElementById(falta); if(e){ try{e.focus();}catch(_){}} try{e.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}
+    return;
+  }
   calc();
   const nome=raw('vNome')||'(sem nome)', login=raw('vLogin'), filial=raw('vFilial'), sup=supDe(filial);
   const hojeStr=new Date().toLocaleDateString('pt-BR');
@@ -1691,8 +1704,15 @@ function carregaRanking(){
   if(!/rk-h/.test(el.innerHTML||'')) el.innerHTML='<p class="rk-load">Carregando ranking…</p>';
   var filial=String(raw('vFilial')||'—'); var meuLogin=(raw('vLogin')||'').toLowerCase(); var meuNome=raw('vNome')||'Você';
   var meuEmoji=raw('vEmoji')||'🎨'; var meta=N('meta'), fat=N('fat'); var minhaAlc=meta>0?fat/meta*100:0;
-  jsonp_(ENVIO_URL+'?action=list', function(res){
-    if(!res||!res.rows){ el.innerHTML='<p class="rk-load">Não consegui carregar agora. Confira a internet e tente novamente.</p>'; return; }
+  jsonp_(ENVIO_URL+'?action=list', function(res, motivo){
+    if(!res||!res.rows){
+      var diag = motivo==='bloqueado'
+        ? 'O Google recusou o acesso ao ranking. Provável causa: a implantação do Apps Script está como "Qualquer pessoa COM conta do Google" — precisa ser "Qualquer pessoa".'
+        : (motivo==='demorou' ? 'O servidor demorou para responder (pode ser o primeiro acesso). Toque em tentar de novo.' : 'Não consegui carregar agora. Confira a internet.');
+      el.innerHTML='<p class="rk-load">'+diag+'</p>'+
+        '<p style="text-align:center;margin-top:8px"><button class="btn btn-navy" onclick="carregaRanking()">🔄 Tentar de novo</button></p>';
+      return;
+    }
     var mes=document.getElementById('mesRef').value||'';
     var rows=res.rows||[];
     function mapR(r){
@@ -1783,8 +1803,8 @@ function dadosSimulacao(){
 }
 
 function enviarGerente(){
-  if(!raw('vNome') || !raw('vLogin') || !raw('vFilial')){
-    alert('Antes de enviar, preencha o seu NOME, o seu LOGIN e a sua FILIAL — é o que identifica você no ranking.');
+  if(!raw('vNome') || !raw('vLogin') || !raw('vFilial') || !raw('vDisc')){
+    alert('Antes de enviar, preencha o seu NOME, o seu LOGIN, a sua FILIAL e o seu PERFIL DISC — é o que identifica você no ranking e personaliza as orientações.');
     return;
   }
   const btn=document.getElementById('btnGer');
@@ -2163,8 +2183,34 @@ async function salvarPdf(){
   }
 }
 
+function padronizarCampos(){
+  // caixa alta em nome e login (valor tambem, para ranking/whatsapp/pdf)
+  ['vNome','vLogin'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    el.addEventListener('input',function(){ var p=this.selectionStart; this.value=this.value.toUpperCase(); try{this.setSelectionRange(p,p);}catch(e){} });
+    if(el.value) el.value=el.value.toUpperCase();
+  });
+  // celular: somente digitos, maximo 11 (DDD + numero), formatado
+  var tel=document.getElementById('vTel');
+  if(tel){
+    tel.setAttribute('maxlength','16'); tel.setAttribute('inputmode','numeric');
+    var fmt=function(v){ var d=(v||'').replace(/\D/g,'').slice(0,11); var o=d;
+      if(d.length>2) o='('+d.slice(0,2)+') '+d.slice(2);
+      if(d.length>7) o='('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7); return o; };
+    tel.addEventListener('input',function(){ this.value=fmt(this.value); });
+    if(tel.value) tel.value=fmt(tel.value);
+  }
+  // R$ nos campos de valor, % nos campos de porcentagem
+  function wrap(id,attr,val){ var inp=document.getElementById(id); if(!inp) return;
+    if(inp.parentNode && inp.parentNode.classList && inp.parentNode.classList.contains('adorn')) return;
+    var w=document.createElement('span'); w.className='adorn'; w.setAttribute(attr,val);
+    inp.parentNode.insertBefore(w,inp); w.appendChild(inp); }
+  ['med90Loja','med90','meta','fat','ticket','fatCnpj','metaCnpj'].forEach(function(id){ wrap(id,'data-pre','R$'); });
+  ['alcLoja','ident','descCpf','descCnpj','pctPosit'].forEach(function(id){ wrap(id,'data-suf','%'); });
+}
 montaFiliais();
 restauraCampos();
+padronizarCampos();
 initPerfil();
 document.querySelectorAll('input,select').forEach(el=>{
   el.addEventListener('input',calc);

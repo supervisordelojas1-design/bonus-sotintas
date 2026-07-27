@@ -387,7 +387,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v4</span>
+    <span class="kicker">Só Tintas · Bônus · v5</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -1380,13 +1380,13 @@ function jsonp_(url, cb){
     var name='__mp'+Math.floor(Math.random()*1e9);
     var s=document.createElement('script');
     var done=false;
-    var fim=function(r){ if(done) return; done=true; try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r); };
+    var fim=function(r,motivo){ if(done) return; done=true; try{delete window[name];}catch(e){} try{s.remove();}catch(e){} cb(r,motivo); };
     window[name]=function(r){ fim(r); };
-    s.onerror=function(){ fim(null); };
+    s.onerror=function(){ fim(null,'bloqueado'); };
     s.src=url+(url.indexOf('?')>-1?'&':'?')+'callback='+name+'&t='+Date.now();
     document.body.appendChild(s);
-    setTimeout(function(){ fim(null); }, 12000); // se o endereço estiver fora do ar, não trava
-  }catch(e){ cb(null); }
+    setTimeout(function(){ fim(null,'demorou'); }, 20000); // cold-start do Apps Script pode demorar
+  }catch(e){ cb(null,'erro'); }
 }
 function nfil_(v){ if(v===null||v===undefined) return ''; var n=Number(v); return (v!==''&&!isNaN(n))?String(n):String(v).trim(); }
 function numB_(v){ if(v==null) return 0; if(typeof v==='number') return v;
@@ -1704,8 +1704,15 @@ function carregaRanking(){
   if(!/rk-h/.test(el.innerHTML||'')) el.innerHTML='<p class="rk-load">Carregando ranking…</p>';
   var filial=String(raw('vFilial')||'—'); var meuLogin=(raw('vLogin')||'').toLowerCase(); var meuNome=raw('vNome')||'Você';
   var meuEmoji=raw('vEmoji')||'🎨'; var meta=N('meta'), fat=N('fat'); var minhaAlc=meta>0?fat/meta*100:0;
-  jsonp_(ENVIO_URL+'?action=list', function(res){
-    if(!res||!res.rows){ el.innerHTML='<p class="rk-load">Não consegui carregar agora. Confira a internet e tente novamente.</p>'; return; }
+  jsonp_(ENVIO_URL+'?action=list', function(res, motivo){
+    if(!res||!res.rows){
+      var diag = motivo==='bloqueado'
+        ? 'O Google recusou o acesso ao ranking. Provável causa: a implantação do Apps Script está como "Qualquer pessoa COM conta do Google" — precisa ser "Qualquer pessoa".'
+        : (motivo==='demorou' ? 'O servidor demorou para responder (pode ser o primeiro acesso). Toque em tentar de novo.' : 'Não consegui carregar agora. Confira a internet.');
+      el.innerHTML='<p class="rk-load">'+diag+'</p>'+
+        '<p style="text-align:center;margin-top:8px"><button class="btn btn-navy" onclick="carregaRanking()">🔄 Tentar de novo</button></p>';
+      return;
+    }
     var mes=document.getElementById('mesRef').value||'';
     var rows=res.rows||[];
     function mapR(r){
