@@ -387,7 +387,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v6</span>
+    <span class="kicker">Só Tintas · Bônus · v7</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -1798,6 +1798,8 @@ function dadosSimulacao(){
     alcLojaNum: (N('alcLoja')||0),
     alcVendNum: (N('meta')>0 ? (N('fat')/N('meta'))*100 : 0).toFixed(1),
     projetadoNum: (function(){var dDec=N('diasDec'),dTot=N('diasTot'),fat=N('fat');return (dDec>0?fat+(fat/dDec)*Math.max(dTot-dDec,0):fat).toFixed(2);})(),
+    ident: (N('ident')||0), itens: (N('itens')||0), ticket: (N('ticket')||0), descCpf: (N('descCpf')||0),
+    fatCnpj: (N('fatCnpj')||0), descCnpj: (N('descCnpj')||0), posit: (N('posit')||0), novosCnpj: (N('novosCnpj')||0), pctPosit: (N('pctPosit')||0),
     atingidos: atingidos, pendentes: pendentes
   };
 }

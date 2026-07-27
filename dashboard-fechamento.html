@@ -54,6 +54,14 @@
   .bar i{display:block;height:100%;border-radius:99px}
   .foot{font-size:11.5px;color:var(--muted);margin:16px 2px 30px}
   .eng-note{font-size:11.5px;color:var(--muted);margin:-2px 0 8px}
+  .habsub{font-family:'Archivo',sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--red);margin:14px 0 8px}
+  .habgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:6px}
+  .habcard{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff}
+  .habcard h4{font-family:'Archivo',sans-serif;font-size:12.5px;color:var(--navy);margin-bottom:7px}
+  .hablist{list-style:none;margin:0;padding:0}
+  .hablist li{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12.5px;padding:3px 0;border-bottom:1px dashed var(--line)}
+  .hablist li:last-child{border-bottom:none}
+  .hablist li b{color:var(--navy);white-space:nowrap}
   .cobranca{background:var(--no-bg);border:1px solid #F3C0C3;border-left:4px solid var(--no);border-radius:12px;padding:12px 14px;margin:6px 0 16px}
   .cobranca h3{font-family:'Archivo',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--no);margin-bottom:6px}
   .cobranca .chips-nome{display:flex;flex-wrap:wrap;gap:6px}
@@ -123,6 +131,13 @@
     <th>Vendedor</th><th class="hide-sm">Loja</th><th class="r">Dias no mês</th><th class="r">Envios</th><th class="hide-sm">Último acesso</th><th>Hoje?</th>
   </tr></thead><tbody></tbody></table>
 
+  <h2>Ranking por habilidade — quem é bom em quê</h2>
+  <p class="eng-note">Melhor desempenho por indicador (último envio de cada vendedor no recorte). Nos descontos, quem tem o MENOR valor fica em 1º. Só entra quem preencheu o indicador.</p>
+  <div class="habsub">CPF</div>
+  <div class="habgrid" id="habCpf"></div>
+  <div class="habsub">CNPJ</div>
+  <div class="habgrid" id="habCnpj"></div>
+
   <p class="foot" id="foot"></p>
 </main>
 
@@ -159,6 +174,8 @@ function normaliza(r){
     garantido: num(r.ganhoHoje), teto: num(r.potencial), naMesa: num(r.faltaBuscar),
     projetado: r.projetadoNum!==''&&r.projetadoNum!=null ? num(r.projetadoNum) : num(r.projetado),
     pend: contaLista(r.pendentes), atg: contaLista(r.atingidos),
+    ident:num(r.ident), itens:num(r.itens), ticket:num(r.ticket), descCpf:num(r.descCpf),
+    fatCnpj:num(r.fatCnpj), descCnpj:num(r.descCnpj), posit:num(r.posit), novosCnpj:num(r.novosCnpj), pctPosit:num(r.pctPosit),
     ts: r.timestamp||''
   };
 }
@@ -223,6 +240,7 @@ function render(rowsRaw){
 
   window.__FROWS = A.rows;
   renderRank(A.rows);
+  renderHabilidades(A.rows);
 
   document.getElementById('foot').textContent =
     'Dado autodeclarado pelos vendedores no simulador — acompanhamento e coaching, não substitui o fechamento oficial (INDICADORES/META). '+
@@ -230,6 +248,36 @@ function render(rowsRaw){
   renderEngajamento();
 }
 
+/* ------- ranking por habilidade ------- */
+function fmtHab(v,fmt){ if(fmt==='brl')return brl(v); if(fmt==='pct')return pct(v);
+  if(fmt==='int')return String(Math.round(v));
+  if(fmt==='num2')return (isFinite(v)?v:0).toLocaleString('pt-BR',{maximumFractionDigits:2}); return String(v); }
+function topHab(rows,cfg){
+  var arr=rows.filter(function(r){ return isFinite(r[cfg.key]) && r[cfg.key]>0; });
+  arr.sort(function(a,b){ return cfg.dir==='asc' ? a[cfg.key]-b[cfg.key] : b[cfg.key]-a[cfg.key]; });
+  return arr.slice(0,5);
+}
+function cardHab(cfg,rows){
+  var top=topHab(rows,cfg); var medal=['🥇','🥈','🥉','4º','5º'];
+  var li = top.length ? top.map(function(r,i){
+    return '<li><span>'+medal[i]+' '+(r.nome||'—')+' <small style="color:var(--muted)">('+r.filial+')</small></span><b>'+fmtHab(r[cfg.key],cfg.fmt)+'</b></li>';
+  }).join('') : '<li style="color:var(--muted)">Sem dados ainda</li>';
+  return '<div class="habcard"><h4>'+cfg.nome+'</h4><ol class="hablist">'+li+'</ol></div>';
+}
+function renderHabilidades(rows){
+  var cpf=[{key:'ident',nome:'% Identificadas',fmt:'pct',dir:'desc'},
+           {key:'itens',nome:'Itens por atendimento',fmt:'num2',dir:'desc'},
+           {key:'ticket',nome:'Ticket médio',fmt:'brl',dir:'desc'},
+           {key:'descCpf',nome:'Menor desconto',fmt:'pct',dir:'asc'}];
+  var cnpj=[{key:'fatCnpj',nome:'Faturamento CNPJ',fmt:'brl',dir:'desc'},
+            {key:'posit',nome:'Clientes positivados',fmt:'int',dir:'desc'},
+            {key:'novosCnpj',nome:'Clientes novos',fmt:'int',dir:'desc'},
+            {key:'pctPosit',nome:'% Positivação',fmt:'pct',dir:'desc'},
+            {key:'descCnpj',nome:'Menor desconto',fmt:'pct',dir:'asc'}];
+  var e1=document.getElementById('habCpf'), e2=document.getElementById('habCnpj');
+  if(e1) e1.innerHTML=cpf.map(function(c){return cardHab(c,rows);}).join('');
+  if(e2) e2.innerHTML=cnpj.map(function(c){return cardHab(c,rows);}).join('');
+}
 /* ------- helpers de UI ------- */
 function card(t,v,cls){ return `<div class="kpi ${cls}"><b>${t}</b><strong class="num">${v}</strong></div>`; }
 function linhaVazia(n){ return `<tr><td colspan="${n}" style="text-align:center;color:var(--muted);padding:18px">Nenhum envio no recorte atual.</td></tr>`; }

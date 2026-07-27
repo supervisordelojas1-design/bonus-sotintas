@@ -29,7 +29,8 @@ var HEADERS = [
   'timestamp','nome','login','filial','supervisor','mes',
   'nivelLoja','nivelIdx','alcLoja','alcLojaNum','alcVend','alcVendNum',
   'meta','faturado','projetado','projetadoNum',
-  'ganhoHoje','potencial','faltaBuscar','atingidos','pendentes','telefone','emoji'
+  'ganhoHoje','potencial','faltaBuscar','atingidos','pendentes','telefone','emoji',
+  'ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','novosCnpj','pctPosit'
 ];
 
 function doGet(e) {
