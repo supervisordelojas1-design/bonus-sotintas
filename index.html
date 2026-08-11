@@ -66,6 +66,13 @@
   .adorn[data-pre]>input{padding-left:38px}
   .adorn[data-suf]::after{content:attr(data-suf);position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:13px;pointer-events:none}
   .adorn[data-suf]>input{padding-right:30px}
+  .observar{margin-top:6px;font-size:11.5px;color:#3A465C;background:#FFF7DE;border:1px solid #F0DFA0;border-radius:8px;padding:6px 9px}
+  .orient-box{margin:14px 0 4px;border:1px dashed var(--line);border-radius:12px;padding:12px;background:#fff}
+  .orient-box .sonho{font-size:13px;color:var(--navy);margin-bottom:14px}
+  .orient-box .assina{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .orient-box .asl .lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:20px}
+  .orient-box .asl .linha{border-top:1.5px solid var(--navy);padding-top:3px;font-size:12px;color:var(--navy);text-align:center}
+  @media(max-width:560px){ .orient-box .assina{grid-template-columns:1fr;gap:20px} }
 
   .wcampo{display:block;font-size:11px;font-weight:600;color:var(--no);margin-top:3px;line-height:1.3}
   .wcampo.ok{color:var(--ok)}
@@ -394,7 +401,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v9</span>
+    <span class="kicker">Só Tintas · Bônus · v10</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -428,6 +435,7 @@
       <label><span>Perfil DISC *</span><select id="vDisc"><option value="">Selecione…</option><option>Executor</option><option>Comunicador</option><option>Planejador</option><option>Analista</option></select></label>
       <label><span>Seu emoji na corrida</span><select id="vEmoji"><option>🎨</option><option>🚀</option><option>🔥</option><option>💪</option><option>🏆</option><option>⭐</option><option>🐺</option><option>🦁</option><option>⚡</option><option>🎯</option></select></label>
       <label><span>Mês de referência</span><input id="mesRef" type="month" value="2026-07"></label>
+      <label style="grid-column:1/-1"><span>Próximo sonho / objetivo a realizar</span><input id="vSonho" type="text" placeholder="EX.: DAR ENTRADA NO MEU CARRO"></label>
     </div>
   </fieldset>
 
@@ -1440,7 +1448,7 @@ function verMinhaPosicao(){
 }
 
 // ---------- Persistência dos dados (localStorage) ----------
-const PERSIST_IDS=['vNome','vLogin','vTel','vEmoji','vFilial','vDisc','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
+const PERSIST_IDS=['vNome','vLogin','vTel','vEmoji','vFilial','vDisc','vSonho','mesRef','med90Loja','loja','alcLoja','contagem','med90','meta','fat','diasDec','diasTot','ident','itens','ticket','descCpf','fatCnpj','descCnpj','posit','pctPosit','metaCnpj','novosCnpj','metaEuc','litEuc'];
 function salvaCampos(){ try{ const o={}; PERSIST_IDS.forEach(id=>{const e=document.getElementById(id); if(e) o[id]=e.value;});
   localStorage.setItem('stbonus_campos', JSON.stringify(o)); }catch(_e){} }
 function restauraCampos(){ try{ const raw=localStorage.getItem('stbonus_campos'); if(!raw) return;
@@ -1675,13 +1683,41 @@ function verResumo(){
         <div class="gap">${l.st.s==='lock'
             ? 'Indicador já atingido — o pagamento está travado pelo pré-requisito: '+l.gat.split('·').pop().trim()
             : (l.falta && l.falta!=='—' ? 'Falta: '+l.falta : l.st.t)}</div>
-        <ul>${(pl.acoes||[]).map(a=>`<li>${a}</li>`).join('')}</ul>
+        <ul>${(pl.acoes||[]).slice(0,3).map(a=>`<li>${a}</li>`).join('')}</ul>
+        ${COMPORTAMENTO[l.nome]?`<div class="observar"><b>👁️ Comportamento a observar (gerente):</b> ${COMPORTAMENTO[l.nome]}</div>`:''}
       </div>`;}).join('')
-    : '<div class="tudo-ok">Todos os indicadores atingidos. Excelente mês — agora é manter o ritmo e proteger a margem!</div>') + ferrFinalHtml();
+    : '<div class="tudo-ok">Todos os indicadores atingidos. Excelente mês — agora é manter o ritmo e proteger a margem!</div>') + blocoOrientacao() + ferrFinalHtml();
   document.body.classList.add('view-resumo');
   window.scrollTo({top:0});
 }
 var DISC_GUIA = {"Executor": {"ic": "⚡", "cor": "#C00000", "nome": "Executor", "forca": "velocidade e foco em fechar — você conduz o cliente à decisão sem medo.", "risco": "atropelar etapas e baixar o preço rápido demais. Segure o desconto e ouça a objeção antes de agir.", "balcao": "ofereça a linha de cima primeiro, feche por ambiente completo e leve à decisão com uma pergunta direta.", "ligacao": "seja objetivo: 1 objetivo por ligação, proposta clara e retorno marcado com data."}, "Comunicador": {"ic": "🗣️", "cor": "#BF8F00", "nome": "Comunicador", "forca": "relacionamento e entusiasmo — você cria conexão e gera indicação como ninguém.", "risco": "falar demais e esquecer de fechar e de registrar (CPF/envio). Conduza a conversa até o pedido.", "balcao": "use histórias e prova social (“esse cliente pintou a fachada e adorou”) e transforme simpatia em cadastro.", "ligacao": "mande áudio pessoal, aqueça a relação e peça indicação de obra e de pintor."}, "Planejador": {"ic": "🗓️", "cor": "#1B7A3D", "nome": "Planejador", "forca": "constância e follow-up — você mantém a carteira ativa e não larga o cliente.", "risco": "acomodar no cliente conhecido e evitar prospecção nova. Reserve tempo para abrir contas.", "balcao": "cuide da recorrência: agende a próxima compra e garanta o complementar do serviço.", "ligacao": "crie rotina fixa (segunda para pintores), com lista organizada e horários definidos."}, "Analista": {"ic": "📊", "cor": "#1F3864", "nome": "Analista", "forca": "dados e argumento técnico — rendimento, durabilidade e custo por ano na ponta do lápis.", "risco": "travar na análise e não agir, ou detalhar demais. Depois do dado, parta para o fechamento.", "balcao": "justifique a premium com números: custo por m² e economia ao longo dos anos.", "ligacao": "prepare os dados do cliente antes e mostre a economia com a conta feita."}};
+var COMPORTAMENTO = {
+  'Meta de Faturamento':'Persegue a meta diária e aborda todo cliente com proposta de ambiente completo, sem esperar o cliente pedir.',
+  'Bônus de Performance':'Mantém constância diária (não só no fim do mês) e pede para acompanhar a própria média 90 dias toda semana.',
+  '% Identificadas (CPF)':'Pede CPF em 100% dos atendimentos, de forma natural, logo na abertura.',
+  'Itens CPF':'Oferece o complementar (rolo, fita, preparação) em toda venda, sem o cliente pedir.',
+  '$ Ticket CPF':'Apresenta a linha premium e a embalagem maior ANTES de partir para o básico.',
+  '% Desconto CPF':'Sustenta o preço, faz silêncio após apresentá-lo e só cede desconto com contrapartida.',
+  'Faturamento CNPJ':'Prospecta o entorno (obras, condomínios) e programa a recompra das contas ativas.',
+  '% Desconto CNPJ':'Usa prazo e volume no lugar de desconto e justifica com serviço e rendimento.',
+  'Clientes Positivados CNPJ':'Cumpre uma meta diária de ligações e reativa quem não comprou no mês.',
+  'Clientes Novos CNPJ':'Cumpre a cota semanal de visitas de prospecção a contas novas.',
+  'Meta CNPJ':'Foca nas contas quentes com obra andando e antecipa reposições.',
+  'Meta de Time':'Ajuda o colega mais perto da meta e acompanha o placar coletivo da loja.',
+  'Meta Eucatex (litragem)':'Oferece a linha Eucatex nas áreas grandes e calcula a litragem na frente do cliente.',
+  'Elite das Vendas CPF':'Trata os 4 indicadores CPF como rotina diária e acompanha o próprio placar semanal.'
+};
+function blocoOrientacao(){
+  var sonho=(document.getElementById('vSonho')?document.getElementById('vSonho').value.trim():'');
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  return '<div class="orient-box">'+
+    (sonho?'<div class="sonho">🎯 <b>Próximo sonho / objetivo:</b> '+sonho+'</div>':'')+
+    '<div class="assina">'+
+      '<div class="asl"><span class="lbl">Data da orientação</span><div class="linha">'+hoje+'</div></div>'+
+      '<div class="asl"><span class="lbl">Assinatura do Gerente</span><div class="linha">&nbsp;</div></div>'+
+      '<div class="asl"><span class="lbl">Assinatura do Vendedor</span><div class="linha">&nbsp;</div></div>'+
+    '</div></div>';
+}
 function discBloco(){
   var p=raw('vDisc');
   if(!p || !DISC_GUIA[p]) return '<div class="disc disc-empty">Dica: escolha o seu <b>Perfil DISC</b> em Identificação (Executor, Comunicador, Planejador ou Analista) para receber as orientações no seu estilo.</div>';
@@ -1874,7 +1910,8 @@ function montaTextoWhats(nDet, nAcoes){
         t+=`\n*${k+1}. ${l.nome}* (vale ${brl(l.ganha)})\n`;
         if(pl.parabens) t+=`✔ ${pl.parabens}\n`;
         if(pl.de && pl.de!=='—') t+=`➡️ Sair de ${pl.de} → para ${pl.para}\n`;
-        (pl.acoes||[]).slice(0,nAcoes).forEach(a=>{ t+=`• ${a}\n`; });
+        (pl.acoes||[]).slice(0,Math.min(nAcoes,3)).forEach(a=>{ t+=`• ${a}\n`; });
+        if(COMPORTAMENTO[l.nome]) t+=`👁️ Observar (gerente): ${COMPORTAMENTO[l.nome]}\n`;
       } else {
         t+=`${k+1}. ${l.nome} (${brl(l.ganha)})`;
         if(pl.de && pl.de!=='—') t+=` — de ${pl.de} para ${pl.para}`;
@@ -1883,6 +1920,9 @@ function montaTextoWhats(nDet, nAcoes){
     });
     if(pend.length>nDet) t+='\n_As demais orientações estão no arquivo do botão "Salvar / compartilhar"._\n';
   }
+  var _s=(document.getElementById('vSonho')?document.getElementById('vSonho').value.trim():'');
+  if(_s) t+=`\n🎯 *Próximo sonho/objetivo:* ${_s}\n`;
+  t+=`\n🗓️ Data da orientação: ${new Date().toLocaleDateString('pt-BR')}\n✍️ Assinatura do gerente: __________\n✍️ Assinatura do vendedor: __________\n`;
   t+='\n_Simulação de apoio preenchida pelo vendedor — vale o fechamento oficial._';
   return t;
 }
@@ -2025,9 +2065,11 @@ function medirPlano(){
     const parL=pl.parabens?_quebra(m,'✔ '+pl.parabens,larg):[];
     const temAlvo=pl.de&&pl.de!=='—';
     const alvoL=temAlvo?_quebra(m,'Sair de: '+pl.de+'   →   Para: '+pl.para,larg):[];
-    const acoesL=(pl.acoes||[]).map(a=>_quebra(m,'• '+a,larg-10));
+    const acoesL=(pl.acoes||[]).slice(0,3).map(a=>_quebra(m,'• '+a,larg-10));
     const nA=acoesL.reduce((s,x)=>s+x.length,0);
-    return {l,pl,parL,alvoL,acoesL,altura:24+parL.length*14+alvoL.length*14+(temAlvo?6:0)+nA*14+16};
+    const comp=COMPORTAMENTO[l.nome]||'';
+    const compL=comp?_quebra(m,'Observar (gerente): '+comp,larg-10):[];
+    return {l,pl,parL,alvoL,acoesL,compL,altura:24+parL.length*14+alvoL.length*14+(temAlvo?6:0)+nA*14+(compL.length?compL.length*13+6:0)+16};
   });
 }
 function agruparPlano(){
@@ -2089,6 +2131,7 @@ function desenharPaginaPlano(cards, numPagina, total, primeiroIndice){
       md.alvoL.forEach(t=>{c.fillText(t,x+16,yy);yy+=14;}); yy+=6; }
     c.font='11px Arial'; c.fillStyle='#3A465C';
     md.acoesL.forEach(b=>b.forEach(t=>{c.fillText(t,x+22,yy);yy+=14;}));
+    if(md.compL && md.compL.length){ yy+=2; c.fillStyle='#8A5A00'; c.font='italic 10.5px Arial'; md.compL.forEach(t=>{c.fillText(t,x+16,yy);yy+=13;}); }
     y+=md.altura+8;
   });
   y+=12;
@@ -2097,15 +2140,43 @@ function desenharPaginaPlano(cards, numPagina, total, primeiroIndice){
 }
 
 // todas as páginas, na ordem
+function desenharPaginaAssinaturas(total){
+  const P=PAG_P, W=PAG_W;
+  var sonho=((document.getElementById('vSonho')?document.getElementById('vSonho').value.trim():'')||'').toUpperCase();
+  var _m=_ctxMedida(); _m.font='13px Arial';
+  var sonhoL = sonho ? _quebra(_m, sonho, W-P*2-24) : [];
+  var caixaS = Math.max(40, sonhoL.length*18+18);
+  var H = 130 + 22 + caixaS + 34 + 40 + 70 + 40;
+  const {cv,c}=_novaPagina(H);
+  let y=_cabecalho(c,'ORIENTAÇÃO E ASSINATURAS','Só Tintas · registro da orientação   ·   página '+total+' de '+total);
+  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('PRÓXIMO SONHO / OBJETIVO DO VENDEDOR',P,y); y+=22;
+  c.fillStyle='#F4F6FA'; _rr(c,P,y,W-P*2,caixaS,9); c.fill();
+  if(sonhoL.length){ c.fillStyle='#22304A'; c.font='13px Arial'; let yy=y+20; sonhoL.forEach(t=>{c.fillText(t,P+12,yy); yy+=18;}); }
+  else { c.fillStyle='#9AA3B2'; c.font='13px Arial'; c.fillText('—',P+12,y+24); }
+  y+=caixaS+34;
+  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('REGISTRO DA ORIENTAÇÃO',P,y); y+=70;
+  const cw=(W-P*2-40)/3, labels=['Data da orientação','Assinatura do Gerente','Assinatura do Vendedor'];
+  const vals=[new Date().toLocaleDateString('pt-BR'),'',''];
+  labels.forEach((lb,ix)=>{
+    const x=P+ix*(cw+20);
+    c.strokeStyle='#1F3864'; c.lineWidth=1.2; c.beginPath(); c.moveTo(x,y); c.lineTo(x+cw,y); c.stroke();
+    if(vals[ix]){ c.fillStyle='#1F3864'; c.font='13px Arial'; c.fillText(vals[ix], x+(cw-c.measureText(vals[ix]).width)/2, y-6); }
+    c.fillStyle='#64748B'; c.font='11px Arial'; c.fillText(lb, x+(cw-c.measureText(lb).width)/2, y+16);
+  });
+  y+=48;
+  _rodape(c,y,'Simulador de Bônus do Vendedor · Só Tintas — documento de orientação.');
+  return cv;
+}
 function desenharPaginas(){
   const grupos=agruparPlano();
-  const total=1+grupos.length;
+  const total=1+grupos.length+1;
   const pgs=[desenharPaginaResumo(total)];
   let ind=0;
   grupos.forEach((cards,ix)=>{
     pgs.push(desenharPaginaPlano(cards, ix+2, total, ind));
     ind+=cards.length;
   });
+  pgs.push(desenharPaginaAssinaturas(total));
   return pgs;
 }
 // imagem única (usada quando não dá para gerar PDF): páginas empilhadas
@@ -2195,7 +2266,7 @@ async function salvarPdf(){
 
 function padronizarCampos(){
   // caixa alta em nome e login (valor tambem, para ranking/whatsapp/pdf)
-  ['vNome','vLogin'].forEach(function(id){
+  ['vNome','vLogin','vSonho'].forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
     el.addEventListener('input',function(){ var p=this.selectionStart; this.value=this.value.toUpperCase(); try{this.setSelectionRange(p,p);}catch(e){} });
     if(el.value) el.value=el.value.toUpperCase();
