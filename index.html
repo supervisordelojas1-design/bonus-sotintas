@@ -60,6 +60,7 @@
   input::placeholder{color:#B8BFCD;font-weight:400}
   input:focus,select:focus{outline:3px solid rgba(31,56,100,.25);border-color:var(--navy)}
   #vNome,#vLogin{text-transform:uppercase}
+  select:disabled{opacity:1;-webkit-text-fill-color:var(--navy);color:var(--navy);background:#EEF2F8;border-style:dashed;cursor:not-allowed}
   .adorn{position:relative;display:block}
   .adorn>input{width:100%}
   .adorn[data-pre]::before{content:attr(data-pre);position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:13px;pointer-events:none}
@@ -401,7 +402,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v10</span>
+    <span class="kicker">Só Tintas · Bônus · v12</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -443,8 +444,8 @@
     <legend>A · Seus dados</legend>
     <div class="grid">
       <label><span>Média 90 dias da LOJA</span><input id="med90Loja" type="number" inputmode="decimal" step="0.01" placeholder="0,00"><small class="wcampo" id="w_med90Loja"></small></label>
-      <label><span>Nível da sua loja</span>
-        <select id="loja"><option value="0">Nível 3 — Ouro</option><option value="1">Nível 2 — Prata</option><option value="2">Nível 1 — Bronze</option></select><small class="wcampo ok" id="w_loja"></small></label>
+      <label><span>Nível da sua loja (automático)</span>
+        <select id="loja" disabled title="Preenchido automaticamente pela Média 90 dias da LOJA"><option value="0">Nível 3 — Ouro</option><option value="1">Nível 2 — Prata</option><option value="2">Nível 1 — Bronze</option></select><small class="wcampo ok" id="w_loja"></small></label>
       <label><span>% alcance da loja</span><input id="alcLoja" type="number" inputmode="decimal" step="0.01" placeholder="0"><small class="wcampo" id="w_alcLoja"></small></label>
       <label><span>Contagem de estoque em dia?</span>
         <select id="contagem"><option value="SIM">Sim</option><option value="NAO">Não</option></select></label>
@@ -508,22 +509,6 @@
   + 50% da carteira. Contagem de estoque atrasada zera o Bônus de Performance da loja inteira.
   Simulação de apoio — vale o fechamento oficial.</p>
 
-  <h2>F · Simulador “E se...”</h2>
-  <div class="hint">Arraste os controles e veja quanto o seu <b>bônus garantido</b> muda — sem alterar seus números reais. Ótimo para decidir <b>antes</b> de dar um desconto ou puxar uma venda maior.</div>
-  <div class="ese-grid">
-    <label><span>+ Venda CPF <b id="eFatCpfV">R$ 0,00</b></span><input id="eFatCpf" type="range" min="0" max="20000" step="500" value="0"></label>
-    <label><span>+ Venda CNPJ <b id="eFatCnpjV">R$ 0,00</b></span><input id="eFatCnpj" type="range" min="0" max="40000" step="1000" value="0"></label>
-    <label><span>+ Clientes novos CNPJ <b id="eNovosV">0</b></span><input id="eNovos" type="range" min="0" max="15" step="1" value="0"></label>
-    <label><span>+ Clientes positivados <b id="ePositV">0</b></span><input id="ePosit" type="range" min="0" max="20" step="1" value="0"></label>
-    <label><span>+ Itens por venda (CPF) <b id="eItensV">+0</b></span><input id="eItens" type="range" min="0" max="2" step="0.1" value="0"></label>
-    <label><span>+ Ticket CPF <b id="eTicketV">R$ 0,00</b></span><input id="eTicket" type="range" min="0" max="200" step="10" value="0"></label>
-    <label><span>+ % Identificadas <b id="eIdentV">0 p.p.</b></span><input id="eIdent" type="range" min="0" max="30" step="1" value="0"></label>
-    <label><span>− Desconto CPF <b id="eDescCpfV">0 p.p.</b></span><input id="eDescCpf" type="range" min="0" max="5" step="0.5" value="0"></label>
-    <label><span>− Desconto CNPJ <b id="eDescCnpjV">0 p.p.</b></span><input id="eDescCnpj" type="range" min="0" max="8" step="0.5" value="0"></label>
-    <label><span>+ Litragem Eucatex <b id="eLitroV">0 L</b></span><input id="eLitro" type="range" min="0" max="2000" step="50" value="0"></label>
-  </div>
-  <div style="margin:2px 0 12px"><button type="button" class="btn btn-ghost" onclick="zeraEse()">Zerar simulação</button></div>
-  <div id="eseResult"></div>
 </div>
 
 <!-- ==================== PÁGINA DE RESUMO ==================== -->
@@ -1984,11 +1969,23 @@ function desenharPaginaResumo(total){
   m.font='10px Arial';
   const altLinha=LINHAS.map(l=>Math.max(30,18+Math.max(_quebra(m,l.gat,330).length,1)*14));
   const altTab=altLinha.reduce((a,b)=>a+b,0);
-  const H=130+92+30+34+96+(DEST.length?(34+DEST.length*18+10):0)+26+altTab+30+50;
+  var _sonho=((document.getElementById('vSonho')?document.getElementById('vSonho').value.trim():'')||'').toUpperCase();
+  m.font='bold 13px Arial';
+  var _sL=_sonho?_quebra(m,_sonho,W-P*2-28):[];
+  var _sonhoH=_sonho?(22+_sL.length*18+12+14):0;
+  const H=130+_sonhoH+92+30+34+96+(DEST.length?(34+DEST.length*18+10):0)+26+altTab+30+50;
   const {cv,c}=_novaPagina(H);
-  let y=_cabecalho(c,'RESUMO DA SIMULAÇÃO DE BÔNUS',
+  let y=_cabecalho(c,'CADASTRO E RESUMO DA SIMULAÇÃO',
         'Só Tintas · simulação de apoio preenchida pelo vendedor — vale o fechamento oficial'+
         (total?'   ·   página 1 de '+total:''));
+  if(_sonho){
+    var _bh=22+_sL.length*18+12;
+    c.fillStyle='#FFF7DE'; _rr(c,P,y,W-P*2,_bh,10); c.fill();
+    c.fillStyle='#BF8F00'; c.fillRect(P,y,5,_bh);
+    c.fillStyle='#8A5A00'; c.font='bold 11px Arial'; c.fillText('PRÓXIMO SONHO / OBJETIVO',P+14,y+13);
+    c.fillStyle='#1F3864'; c.font='bold 13px Arial'; var _yy=y+32; _sL.forEach(function(t){c.fillText(t,P+14,_yy);_yy+=18;});
+    y+=_bh+14;
+  }
 
   const cards=[['JÁ GARANTIDO HOJE',brl(TOTAIS.hoje),'#E4F4E9','#1B7A3D'],
                ['AINDA DÁ PARA BUSCAR',brl(TOTAIS.buscar),'#FCE8E9','#B4232A'],
@@ -2142,19 +2139,12 @@ function desenharPaginaPlano(cards, numPagina, total, primeiroIndice){
 // todas as páginas, na ordem
 function desenharPaginaAssinaturas(total){
   const P=PAG_P, W=PAG_W;
-  var sonho=((document.getElementById('vSonho')?document.getElementById('vSonho').value.trim():'')||'').toUpperCase();
-  var _m=_ctxMedida(); _m.font='13px Arial';
-  var sonhoL = sonho ? _quebra(_m, sonho, W-P*2-24) : [];
-  var caixaS = Math.max(40, sonhoL.length*18+18);
-  var H = 130 + 22 + caixaS + 34 + 40 + 70 + 40;
+  var H = 130 + 30 + 30 + 90 + 40;
   const {cv,c}=_novaPagina(H);
-  let y=_cabecalho(c,'ORIENTAÇÃO E ASSINATURAS','Só Tintas · registro da orientação   ·   página '+total+' de '+total);
-  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('PRÓXIMO SONHO / OBJETIVO DO VENDEDOR',P,y); y+=22;
-  c.fillStyle='#F4F6FA'; _rr(c,P,y,W-P*2,caixaS,9); c.fill();
-  if(sonhoL.length){ c.fillStyle='#22304A'; c.font='13px Arial'; let yy=y+20; sonhoL.forEach(t=>{c.fillText(t,P+12,yy); yy+=18;}); }
-  else { c.fillStyle='#9AA3B2'; c.font='13px Arial'; c.fillText('—',P+12,y+24); }
-  y+=caixaS+34;
-  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('REGISTRO DA ORIENTAÇÃO',P,y); y+=70;
+  let y=_cabecalho(c,'FECHAMENTO — ASSINATURAS','Só Tintas · registro da orientação   ·   página '+total+' de '+total);
+  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('REGISTRO DA ORIENTAÇÃO',P,y); y+=30;
+  c.fillStyle='#64748B'; c.font='11px Arial';
+  c.fillText('Assine após a conversa de orientação entre gerente e vendedor.',P,y); y+=64;
   const cw=(W-P*2-40)/3, labels=['Data da orientação','Assinatura do Gerente','Assinatura do Vendedor'];
   const vals=[new Date().toLocaleDateString('pt-BR'),'',''];
   labels.forEach((lb,ix)=>{
