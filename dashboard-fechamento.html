@@ -34,6 +34,10 @@
   .filtros select{margin-top:4px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-weight:700;color:var(--navy);background:#fff;min-width:150px}
   .filtros .btn{padding:9px 14px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.4px;cursor:pointer}
   .filtros .upd{font-size:11px;color:var(--muted);margin-left:auto;align-self:center}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+  .tabbtn{padding:9px 16px;border:none;background:none;font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabbtn.active{color:var(--navy);border-bottom-color:var(--red)}
+  .habpos{display:inline-block;min-width:22px;font-weight:800;color:var(--muted)}
 
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;border-top:4px solid var(--navy)}
@@ -102,6 +106,12 @@
     <span class="upd" id="upd"></span>
   </div>
 
+  <div class="tabs">
+    <button class="tabbtn active" id="tabFech" onclick="showView('fech')">📊 Fechamento</button>
+    <button class="tabbtn" id="tabHab" onclick="showView('hab')">🏆 Quem é bom no quê</button>
+  </div>
+
+  <div id="viewFech">
   <div class="kpis" id="kpis"></div>
 
   <div id="focos" class="focos" style="display:none"></div>
@@ -136,13 +146,22 @@
   <table id="tabEng"><thead><tr>
     <th>Vendedor</th><th class="hide-sm">Loja</th><th class="r">Dias no mês</th><th class="r">Envios</th><th class="hide-sm">Último acesso</th><th>Hoje?</th>
   </tr></thead><tbody></tbody></table>
+  </div><!-- /viewFech -->
 
+  <div id="viewHab" style="display:none">
   <h2>Ranking por habilidade — quem é bom em quê</h2>
-  <p class="eng-note">Melhor desempenho por indicador (último envio de cada vendedor no recorte). Nos descontos, quem tem o MENOR valor fica em 1º. Só entra quem preencheu o indicador.</p>
+  <p class="eng-note">Ranking de todos os colaboradores por indicador (último envio no recorte). Nos descontos, quem tem o MENOR valor é o melhor. Só entra quem preencheu o indicador.</p>
+  <div class="filtros" style="margin-bottom:10px">
+    <div><label>Ordem do ranking</label><select id="habOrder" onchange="renderHabilidades(window.__FROWS||[])">
+      <option value="natural">Melhores primeiro</option>
+      <option value="invertido">Piores primeiro (focar quem precisa)</option>
+    </select></div>
+  </div>
   <div class="habsub">CPF</div>
   <div class="habgrid" id="habCpf"></div>
   <div class="habsub">CNPJ</div>
   <div class="habgrid" id="habCnpj"></div>
+  </div><!-- /viewHab -->
 
   <p class="foot" id="foot"></p>
 </main>
@@ -258,17 +277,19 @@ function render(rowsRaw){
 function fmtHab(v,fmt){ if(fmt==='brl')return brl(v); if(fmt==='pct')return pct(v);
   if(fmt==='int')return String(Math.round(v));
   if(fmt==='num2')return (isFinite(v)?v:0).toLocaleString('pt-BR',{maximumFractionDigits:2}); return String(v); }
-function topHab(rows,cfg){
+function topHab(rows,cfg,invert){
   var arr=rows.filter(function(r){ return isFinite(r[cfg.key]) && r[cfg.key]>0; });
-  arr.sort(function(a,b){ return cfg.dir==='asc' ? a[cfg.key]-b[cfg.key] : b[cfg.key]-a[cfg.key]; });
-  return arr.slice(0,5);
+  var dir=cfg.dir; if(invert) dir=(dir==='asc'?'desc':'asc');
+  arr.sort(function(a,b){ return dir==='asc' ? a[cfg.key]-b[cfg.key] : b[cfg.key]-a[cfg.key]; });
+  return arr;
 }
-function cardHab(cfg,rows){
-  var top=topHab(rows,cfg); var medal=['🥇','🥈','🥉','4º','5º'];
+function cardHab(cfg,rows,invert){
+  var top=topHab(rows,cfg,invert); var medal=['🥇','🥈','🥉'];
   var li = top.length ? top.map(function(r,i){
-    return '<li><span>'+medal[i]+' '+(r.nome||'—')+' <small style="color:var(--muted)">('+r.filial+')</small></span><b>'+fmtHab(r[cfg.key],cfg.fmt)+'</b></li>';
+    var pos = (!invert && i<3) ? medal[i] : '<span class="habpos">'+(i+1)+'º</span>';
+    return '<li><span>'+pos+' '+(r.nome||'—')+' <small style="color:var(--muted)">('+r.filial+')</small></span><b>'+fmtHab(r[cfg.key],cfg.fmt)+'</b></li>';
   }).join('') : '<li style="color:var(--muted)">Sem dados ainda</li>';
-  return '<div class="habcard"><h4>'+cfg.nome+'</h4><ol class="hablist">'+li+'</ol></div>';
+  return '<div class="habcard"><h4>'+cfg.nome+' <small style="color:var(--muted);font-weight:400">('+top.length+')</small></h4><ol class="hablist">'+li+'</ol></div>';
 }
 function renderHabilidades(rows){
   var cpf=[{key:'ident',nome:'% Identificadas',fmt:'pct',dir:'desc'},
@@ -280,9 +301,17 @@ function renderHabilidades(rows){
             {key:'novosCnpj',nome:'Clientes novos',fmt:'int',dir:'desc'},
             {key:'pctPosit',nome:'% Positivação',fmt:'pct',dir:'desc'},
             {key:'descCnpj',nome:'Menor desconto',fmt:'pct',dir:'asc'}];
+  var invert = (document.getElementById('habOrder') && document.getElementById('habOrder').value==='invertido');
   var e1=document.getElementById('habCpf'), e2=document.getElementById('habCnpj');
-  if(e1) e1.innerHTML=cpf.map(function(c){return cardHab(c,rows);}).join('');
-  if(e2) e2.innerHTML=cnpj.map(function(c){return cardHab(c,rows);}).join('');
+  if(e1) e1.innerHTML=cpf.map(function(c){return cardHab(c,rows,invert);}).join('');
+  if(e2) e2.innerHTML=cnpj.map(function(c){return cardHab(c,rows,invert);}).join('');
+}
+function showView(v){
+  var f=document.getElementById('viewFech'), h=document.getElementById('viewHab');
+  var bf=document.getElementById('tabFech'), bh=document.getElementById('tabHab');
+  if(!f||!h) return;
+  if(v==='hab'){ f.style.display='none'; h.style.display=''; bf.classList.remove('active'); bh.classList.add('active'); }
+  else { f.style.display=''; h.style.display='none'; bh.classList.remove('active'); bf.classList.add('active'); }
 }
 /* ------- helpers de UI ------- */
 function card(t,v,cls){ return `<div class="kpi ${cls}"><b>${t}</b><strong class="num">${v}</strong></div>`; }
