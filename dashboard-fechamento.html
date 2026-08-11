@@ -410,8 +410,9 @@ function renderEngajamento(){
   }
   var mes=val('fMes'), sup=val('fSup'), loja=val('fLoja');
   var rows=stats.filter(function(r){ return (!mes||String(r.mes||'')===mes) && (!sup||r.supervisor===sup) && (!loja||String(r.filial)===loja); });
-  var hoje=new Date().toISOString().slice(0,10);
-  function ehHoje(r){ return r.ultimo && String(r.ultimo).slice(0,10)===hoje; }
+  function diaLocal_(x){ var d=new Date(x); if(isNaN(d)) return ''; return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  var hoje=diaLocal_(new Date());
+  function ehHoje(r){ return r.ultimo && diaLocal_(r.ultimo)===hoje; }
   var n=rows.length;
   var hojeN=rows.filter(ehHoje).length;
   var mediaDias= n ? (rows.reduce(function(a,r){return a+(+r.dias||0);},0)/n) : 0;
