@@ -106,6 +106,8 @@ function normMes_(v){
   return s;
 }
 function normFilial_(v){ if(v===null||v===undefined) return ''; var n=Number(v); return (v!==''&&!isNaN(n))?String(n):String(v); }
+// Dia no fuso do Brasil (America/Sao_Paulo): garante corte 00:00:00-23:59:59 local
+function diaBR_(d){ try{ return Utilities.formatDate(d,'America/Sao_Paulo','yyyy-MM-dd'); }catch(e){ return d.toISOString().slice(0,10); } }
 
 function listar_(callback) {
   var sh = planilha_();
@@ -158,7 +160,7 @@ function stats_(callback) {
     var o = map[key];
     o.envios++;
     if (valido) {
-      o.diasSet[ts.toISOString().slice(0, 10)] = 1;
+      o.diasSet[diaBR_(ts)] = 1;
       if (ts.getTime() >= o.ultimoTs) {
         o.ultimoTs = ts.getTime();
         o.ultimo = ts.toISOString();
