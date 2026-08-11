@@ -402,7 +402,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v12</span>
+    <span class="kicker">Só Tintas · Bônus · v13</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -2157,17 +2157,79 @@ function desenharPaginaAssinaturas(total){
   _rodape(c,y,'Simulador de Bônus do Vendedor · Só Tintas — documento de orientação.');
   return cv;
 }
-function desenharPaginas(){
-  const grupos=agruparPlano();
-  const total=1+grupos.length+1;
-  const pgs=[desenharPaginaResumo(total)];
-  let ind=0;
-  grupos.forEach((cards,ix)=>{
-    pgs.push(desenharPaginaPlano(cards, ix+2, total, ind));
-    ind+=cards.length;
+function desenharPlanoAssinaturas(total){
+  const P=PAG_P, W=PAG_W;
+  const medidas=medirPlano();
+  var _g=DISC_GUIA[raw('vDisc')];
+  var _discLins=[];
+  if(_g){ var _mc=_ctxMedida(); _mc.font='11px Arial'; var _larg=W-P*2-32;
+    [['Força',_g.forca],['Cuidado',_g.risco],['No balcão',_g.balcao],['Na ligação',_g.ligacao]].forEach(function(par){
+      _quebra(_mc, par[0]+': '+par[1], _larg).forEach(function(t){ _discLins.push(t); }); }); }
+  var _discH = _g ? (26 + _discLins.length*14 + 16) : 0;
+  var cardsH = medidas.reduce((s,x)=>s+x.altura+8,0);
+  var semPend = medidas.length===0;
+  var asBlocoH = 24+18+60+40+30;
+  var H = 130 + _discH + 24 + (semPend?36:cardsH) + 22 + asBlocoH;
+  const {cv,c}=_novaPagina(H);
+  let y=_cabecalho(c,'PLANO DE AÇÃO E ASSINATURAS',
+        (semPend?'Todos os indicadores atingidos':('O que fazer para destravar '+brl(TOTAIS.buscar)+' que ainda estão na mesa'))+
+        '   ·   página '+total+' de '+total);
+  if(_g){
+    var bx=P, bw=W-P*2, bh=_discH-8;
+    c.fillStyle='#EEF2F8'; _rr(c,bx,y,bw,bh,9); c.fill();
+    c.fillStyle=_g.cor; c.fillRect(bx,y+2,5,bh-4);
+    var yy0=y+18;
+    c.fillStyle='#1F3864'; c.font='bold 12px Arial';
+    c.fillText('SEU PERFIL: '+_g.nome.toUpperCase()+' — COMO ATACAR', bx+16, yy0); yy0+=16;
+    c.font='11px Arial'; c.fillStyle='#22304A';
+    _discLins.forEach(function(t){ c.fillText(t, bx+16, yy0); yy0+=14; });
+    y += bh + 10;
+  }
+  if(semPend){
+    c.fillStyle='#1B7A3D'; c.font='bold 13px Arial';
+    c.fillText('Todos os indicadores atingidos. Excelente mês — mantenha o ritmo!',P,y); y+=36;
+  } else {
+    c.fillStyle='#1F3864'; c.font='bold 13px Arial';
+    c.fillText('PRIORIDADES — DA QUE MAIS PAGA PARA A QUE MENOS PAGA',P,y); y+=24;
+    let n=0;
+    medidas.forEach(md=>{
+      n++;
+      const x=P, w=W-P*2;
+      c.fillStyle='#FFFFFF'; _rr(c,x,y,w,md.altura,9); c.fill();
+      c.strokeStyle='#DDE3EE'; c.lineWidth=1; _rr(c,x,y,w,md.altura,9); c.stroke();
+      c.fillStyle=md.l.st.s==='lock'?'#8A5A00':'#C00000'; c.fillRect(x,y+2,5,md.altura-4);
+      let yy=y+10;
+      c.fillStyle='#1F3864'; c.font='bold 12.5px Arial'; c.fillText(n+'. '+md.l.nome,x+16,yy);
+      c.fillStyle='#1B7A3D'; c.font='bold 12px Arial';
+      const vt='vale '+brl(md.l.ganha);
+      c.fillText(vt,x+w-16-c.measureText(vt).width,yy);
+      yy+=17; c.font='11px Arial';
+      if(md.parL.length){ c.fillStyle='#1B7A3D'; md.parL.forEach(t=>{c.fillText(t,x+16,yy);yy+=14;}); }
+      if(md.alvoL.length){ c.fillStyle='#22304A'; c.font='bold 11px Arial'; md.alvoL.forEach(t=>{c.fillText(t,x+16,yy);yy+=14;}); yy+=6; }
+      c.font='11px Arial'; c.fillStyle='#3A465C';
+      md.acoesL.forEach(b=>b.forEach(t=>{c.fillText(t,x+22,yy);yy+=14;}));
+      if(md.compL && md.compL.length){ yy+=2; c.fillStyle='#8A5A00'; c.font='italic 10.5px Arial'; md.compL.forEach(t=>{c.fillText(t,x+16,yy);yy+=13;}); }
+      y+=md.altura+8;
+    });
+  }
+  y+=14;
+  c.fillStyle='#1F3864'; c.font='bold 13px Arial'; c.fillText('REGISTRO DA ORIENTAÇÃO',P,y); y+=16;
+  c.fillStyle='#64748B'; c.font='11px Arial';
+  c.fillText('Assine após a conversa de orientação entre gerente e vendedor.',P,y); y+=58;
+  const cw=(W-P*2-40)/3, labels=['Data da orientação','Assinatura do Gerente','Assinatura do Vendedor'];
+  const dataStr=new Date().toLocaleDateString('pt-BR');
+  labels.forEach((lb,ix)=>{
+    const x=P+ix*(cw+20);
+    if(ix===0){ c.fillStyle='#1F3864'; c.font='13px Arial'; c.fillText(dataStr, x+(cw-c.measureText(dataStr).width)/2, y-16); }
+    c.strokeStyle='#1F3864'; c.lineWidth=1.2; c.beginPath(); c.moveTo(x,y); c.lineTo(x+cw,y); c.stroke();
+    c.fillStyle='#64748B'; c.font='11px Arial'; c.fillText(lb, x+(cw-c.measureText(lb).width)/2, y+16);
   });
-  pgs.push(desenharPaginaAssinaturas(total));
-  return pgs;
+  y+=44;
+  _rodape(c,y,'Simulador de Bônus do Vendedor · Só Tintas — documento de orientação.');
+  return cv;
+}
+function desenharPaginas(){
+  return [ desenharPaginaResumo(2), desenharPlanoAssinaturas(2) ];
 }
 // imagem única (usada quando não dá para gerar PDF): páginas empilhadas
 function desenharResumo(){
