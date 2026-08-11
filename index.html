@@ -394,7 +394,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v8</span>
+    <span class="kicker">Só Tintas · Bônus · v9</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -663,10 +663,11 @@ function htmlFerramenta(f){
 
 // ================= FILIAIS E SUPERVISORES =================
 const SUPERVISOR = {
-  BRUNO:  ['002','004','006','007','010','013','015','022','023'],
-  TALITA: ['017','018','021','024','025','036'],
-  THIAGO: ['016','027','029','030','032','033','034','037'],
-  RAMON:  ['008','009','012','019','026','028','035','038']
+  BRUNO:            ['002','004','006','007','010','015','022','023'],
+  RAMON:            ['018','019','021','024','025','026','035','036'],
+  DANILO:           ['009','012','013','017','028','038'],
+  THIAGO:           ['016','027','029','030','032','033','034','037'],
+  'RODRIGO BRANCO': ['008']
 };
 const LOJA_SUP = {};
 for(const s in SUPERVISOR) SUPERVISOR[s].forEach(f=>LOJA_SUP[f]=s);
