@@ -402,7 +402,7 @@
 <body>
 <header>
   <div class="wrap">
-    <span class="kicker">Só Tintas · Bônus · v13</span>
+    <span class="kicker">Só Tintas · Bônus · v14</span>
     <h1>Simulador de Bônus do Vendedor</h1>
     <p>Preencha seus números e veja <b>na hora</b> quanto já garantiu e quanto ainda dá pra buscar no mês.</p>
   </div>
@@ -1955,8 +1955,13 @@ function _cabecalho(c,titulo,sub){
   const nome=raw('vNome')||'(sem nome)', login=raw('vLogin'), filial=raw('vFilial'), sup=supDe(filial);
   c.font='13px Arial'; c.fillStyle='#CBD5E8';
   c.fillText([nome, login&&('login '+login), filial&&('filial '+filial), sup&&('sup. '+sup),
-              new Date().toLocaleDateString('pt-BR')].filter(Boolean).join('  ·  '),P,56);
-  c.font='11px Arial'; c.fillStyle='#9FB0CE'; c.fillText(sub,P,78);
+              new Date().toLocaleDateString('pt-BR')].filter(Boolean).join('  ·  '),P,53);
+  var _nivV = (CHIPS && CHIPS['Seu nível']) ? CHIPS['Seu nível'] : '';
+  var _lj = document.getElementById('loja');
+  var _nivL = _lj ? (['Nível 3 — Ouro','Nível 2 — Prata','Nível 1 — Bronze'][+_lj.value]||'') : '';
+  c.font='12px Arial'; c.fillStyle='#E7ECF6';
+  c.fillText([_nivV&&('Nível do vendedor: '+_nivV), _nivL&&('Nível da loja: '+_nivL)].filter(Boolean).join('   ·   '),P,72);
+  c.font='11px Arial'; c.fillStyle='#9FB0CE'; c.fillText(sub,P,91);
   return 130;
 }
 function _rodape(c,y,txt){
